@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+grepf () {
+  if [ "$#" -ge 1 ]; then
+    local shwordsplit="$(set -o | grep shwordsplit | awk '{print $2}')"
+    [ "$shwordsplit" != "" -a "$shwordsplit" = "off" ] && setopt SH_WORD_SPLIT && shwordsplit="ENABLED"
+
+    local PATTERN="$1"; shift
+
+    local INCLUDED_RAW=""
+    local EXCLUDED_RAW=""
+    if [ "$#" -gt 0 ]; then
+      INCLUDED_RAW="$(echo "$@" | sed -n "s/\(.*\)::\(.*\)/\1/p" | xargs)"
+      EXCLUDED_RAW="$(echo "$@" | sed -n "s/\(.*\)::\(.*\)/\2/p" | xargs)"
+      [ "$INCLUDED_RAW" = "" -a "$EXCLUDED_RAW" = "" ] && INCLUDED_RAW="$@"
+      [ "$INCLUDED_RAW" = "" -o "$INCLUDED_RAW" = "::" ] && INCLUDED_RAW=""
+    fi
+    local ARRAY DIRS FILES
+    local INCLUDED_DIRS INCLUDED_FILES
+    local EXCLUDED_DIRS EXCLUDED_FILES
+    ARRAY=($INCLUDED_RAW); DIRS=(); FILES=()
+    for i in $ARRAY; do
+      if [ "$(printf $i | tail -c1)" = "/" ]
+      then DIRS+=("$(echo $i | sed 's/.$//')")
+      else FILES+=("$i"); fi
+    done
+    [ "$DIRS" != "" ] && INCLUDED_DIRS="--include-dir={$(echo $DIRS | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    [ "$FILES" != "" ] && INCLUDED_FILES="--include={$(echo $FILES | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    ARRAY=($EXCLUDED_RAW); DIRS=(); FILES=()
+    for i in $ARRAY; do
+      if [ "$(printf $i | tail -c1)" = "/" ]
+      then DIRS+=("$(echo $i | sed 's/.$//')")
+      else FILES+=("$i"); fi
+    done
+    [ "$DIRS" != "" ] && EXCLUDED_DIRS="--exclude-dir={$(echo $DIRS | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    [ "$FILES" != "" ] && EXCLUDED_FILES="--exclude={$(echo $FILES | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+
+    eval "grep -rEIHn --context=3 --color=always -e \"$PATTERN\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | less -RiMSFX#4"
+
+    [ "$shwordsplit" = "ENABLED" ] && unsetopt SH_WORD_SPLIT
+  else
+    echo "   Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...]"
+    echo
+    echo "   Search for <pattern> within <INCLUDED> files, ignoring <EXCLUDED> files."
+    echo "   <INCLUDED> files are separated from <EXCLUDED> files by a '::'."
+    echo "   When omitted, <INCLUDED> is the current dir and <EXCLUDED> is empty."
+    echo
+    echo "   Examples:"
+    echo "      grepf pattern"
+    echo "      grepf pattern *.py"
+    echo "      grepf pattern file1.txt folder1/ :: folder1/file2.txt"
+    echo "      grepf pattern :: file1.txt **/*.log"
+    echo
+    echo "   Options:"
+    echo "      --info       Instead of showing each match, show an overview of which files"
+    echo "                   were matched and how many matches each file."
+    echo "      --showcmd    Show the full command that grepf transforms into."
+  fi
+}
