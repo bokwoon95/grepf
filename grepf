@@ -36,9 +36,9 @@ if [ "$ARGS" != "" ]; then
   [ "$EF" != "" ] && EF="--exclude={$(echo $EF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
 
   if [ "$list" ]; then
-    cmd="grep --recursive -I --context=3 --color=always --regexp=\"$PATTERN\" * $ID $IF $ED $EF --files-with-matches | less -RiMSFX#4"
+    cmd="grep $OPTS --recursive -I --context=3 --color=always --regexp=\"$PATTERN\" * $ID $IF $ED $EF --files-with-matches | less -RiMSFX#4"
   else
-    cmd="grep --recursive -I --context=3 --color=always --regexp=\"$PATTERN\" * $ID $IF $ED $EF -H --line-number | less -RiMSFX#4"
+    cmd="grep $OPTS --recursive -I --context=3 --color=always --regexp=\"$PATTERN\" * $ID $IF $ED $EF -H --line-number | less -RiMSFX#4"
   fi;
   if [ "$describe" ]; then echo "$cmd"; else eval "$cmd"; fi
 else
