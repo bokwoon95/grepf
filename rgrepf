@@ -1,59 +1,93 @@
 #!/usr/bin/env bash
 
-rgrepf () {
-  if [ "$#" -ge 2 ]; then
-    local shwordsplit="$(set -o | grep shwordsplit | awk '{print $2}')"
-    [ "$shwordsplit" != "" -a "$shwordsplit" = "off" ] && setopt SH_WORD_SPLIT && shwordsplit="ENABLED"
+# Extract '--options/-o' into $OPTS and dump the rest into $ARGS
+for i in "$@"; do
+  case $i in
+    --list) list="true" ;;
+    --describe) describe="true" ;;
+    -h|--h|--help) helpp="true" ;;
+    -*|--*) OPTS="$OPTS $i" ;;
+    *) ARGS="$ARGS $i" ;;
+  esac
+done
 
-    local OLD="$1"; shift
-    local NEW="$1"; shift
+# Get user's pattern
+OLD="$(echo $ARGS | awk '{print $1}')"
+NEW="$(echo $ARGS | awk '{print $2}')"
+if [ "$OLD" != "" -a "$NEW" != "" -a ! "$helpp" ]; then
+  # Because we are not using $@, we have to use 'awk' in place of 'shift'
+  ARGS="$(echo $ARGS | awk '{for (i=3;i<=NF;i++) printf "%s ", $i}')"
 
-    local INCLUDED_RAW=""
-    local EXCLUDED_RAW=""
-    if [ "$#" -gt 0 ]; then
-      INCLUDED_RAW="$(echo "$@" | sed -n "s/\(.*\)::\(.*\)/\1/p" | xargs)"
-      EXCLUDED_RAW="$(echo "$@" | sed -n "s/\(.*\)::\(.*\)/\2/p" | xargs)"
-      [ "$INCLUDED_RAW" = "" -a "$EXCLUDED_RAW" = "" ] && INCLUDED_RAW="$@"
-      [ "$INCLUDED_RAW" = "" -o "$INCLUDED_RAW" = "::" ] && INCLUDED_RAW=""
-    fi
-    local ARRAY DIRS FILES
-    local INCLUDED_DIRS INCLUDED_FILES
-    local EXCLUDED_DIRS EXCLUDED_FILES
-    ARRAY=($INCLUDED_RAW); DIRS=(); FILES=()
-    for i in $ARRAY; do
-      if [ "$(printf $i | tail -c1)" = "/" ]
-      then DIRS+=("$(echo $i | sed 's/.$//')")
-      else FILES+=("$i"); fi
-    done
-    [ "$DIRS" != "" ] && INCLUDED_DIRS="--include-dir={$(echo $DIRS | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    [ "$FILES" != "" ] && INCLUDED_FILES="--include={$(echo $FILES | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    ARRAY=($EXCLUDED_RAW); DIRS=(); FILES=()
-    for i in $ARRAY; do
-      if [ "$(printf $i | tail -c1)" = "/" ]
-      then DIRS+=("$(echo $i | sed 's/.$//')")
-      else FILES+=("$i"); fi
-    done
-    [ "$DIRS" != "" ] && EXCLUDED_DIRS="--exclude-dir={$(echo $DIRS | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    [ "$FILES" != "" ] && EXCLUDED_FILES="--exclude={$(echo $FILES | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+  if [ "$ARGS" != "" ]; then
+    # Separate the included and excluded files into $IN and $EX
+    IN="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
+    EX="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
+    [ "$IN" = "" -a "$EX" = "" ] && IN="$ARGS"
+    [ "$IN" = "" -o "$IN" = "::" ] && IN=""
 
-    # echo "grep -rEIl --null \"$OLD\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | xargs -0 perl -pi -e \"s@$OLD@$NEW@g\""
-    eval "grep -rEIl \"$OLD\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | xargs perl -pi -e \"s@$OLD@$NEW@g\""
-
-    eval "grep -rEIHn --context=3 --color=always -e \"$NEW\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | less -RiMSFX#4"
-
-    [ "$shwordsplit" = "ENABLED" ] && unsetopt SH_WORD_SPLIT
-  else
-    echo "   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...]"
-    echo
-    echo "   Search and replace <old> with <new> in <INCLUDED> files, ignoring <EXCLUDED> files."
-    echo "   <INCLUDED> files are separated from <EXCLUDED> files by a '::'."
-    echo "   When omitted, <INCLUDED> is the current dir and <EXCLUDED> is empty."
-    echo "   Note: If '@' appears in <old> or <new>, it must be escaped i.e. '\\@'"
-    echo
-    echo "   Examples:"
-    echo "      rgrepf old new"
-    echo "      rgrepf old new *.py"
-    echo "      rgrepf old new file1.txt folder1/ :: folder1/file2.txt"
-    echo "      rgrepf old new :: file1.txt **/*.log"
+    # Filter $IN into $IF & $ID depending on whether it's a File or Dir
+    # Filter $EX into $EF & $ED depending on whether it's a File or Dir
+    ID="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1)}')"
+    IF="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
+    ED="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1) }')"
+    EF="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
+    [ "$ID" != "" ] && ID="--include-dir={$(echo $ID | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    [ "$IF" != "" ] && IF="--include={$(echo $IF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    [ "$ED" != "" ] && ED="--exclude-dir={$(echo $ED | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    [ "$EF" != "" ] && EF="--exclude={$(echo $EF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
   fi
+
+  # if --list option is active, show the files that are affected instead
+  if [ "$list" ]; then
+    cmd="grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$OLD\" * $ID $IF $ED $EF --files-with-matches | less -RiMSFX#4"
+  else
+    cmd="grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$OLD\" * $ID $IF $ED $EF --files-with-matches --null | xargs -0 perl -pi -e \"s@$OLD@$NEW@g\""
+  fi;
+
+  # if --describe option is active, print the command instead of executing it
+  if [ "$describe" ]; then
+    echo "$cmd";
+  else
+    eval "$cmd";
+    # Show the results of that find and replace
+    eval "grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$NEW\" * $ID $IF $ED $EF -H --line-number | less -RiMSFX#4"
+  fi
+else
+  echo "   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]"
+  echo
+  echo "   Search and replace <old> with <new> in [INCLUDED] files, ignoring [EXCLUDED] files."
+  echo "   [INCLUDED] files are separated from [EXCLUDED] files by a '::'."
+  echo "   When omitted, [INCLUDED] is the current dir and [EXCLUDED] is empty."
+  echo "   Any [--OPTIONS] you can pass to grep, you can pass to grepf as well"
+  echo "   Note: If '@' appears in <old> or <new>, it must be escaped i.e. '\\@'"
+  echo
+  echo "   Examples:"
+  echo "      rgrepf old new"
+  echo "      rgrepf old new *.py"
+  echo "      rgrepf old new file1.txt folder1/ :: folder1/file2.txt"
+  echo "      rgrepf old new :: file1.txt **/*.log"
+  echo
+  echo "   Options(only for rgrepf):"
+  echo "      --list       Instead of showing each match, show an overview of which files"
+  echo "                   were matched"
+  echo "      --describe   Show the full command that grepf transforms into."
+  echo "      --help       Show this help"
+fi
+
+rgrepf () {
+  eval "grep -rEIl \"$OLD\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | xargs perl -pi -e \"s@$OLD@$NEW@g\""
+
+  eval "grep -rEIHn --context=3 --color=always -e \"$NEW\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | less -RiMSFX#4"
+  echo "   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...]"
+  echo
+  echo "   Search and replace <old> with <new> in <INCLUDED> files, ignoring <EXCLUDED> files."
+  echo "   <INCLUDED> files are separated from <EXCLUDED> files by a '::'."
+  echo "   When omitted, <INCLUDED> is the current dir and <EXCLUDED> is empty."
+  echo "   Note: If '@' appears in <old> or <new>, it must be escaped i.e. '\\@'"
+  echo
+  echo "   Examples:"
+  echo "      rgrepf old new"
+  echo "      rgrepf old new *.py"
+  echo "      rgrepf old new file1.txt folder1/ :: folder1/file2.txt"
+  echo "      rgrepf old new :: file1.txt **/*.log"
 }

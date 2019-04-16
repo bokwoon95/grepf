@@ -11,15 +11,14 @@ for i in "$@"; do
   esac
 done
 
-if [ "$ARGS" != "" -a ! "$helpp" ]; then
-  # Get user's pattern
-  PATTERN="$(echo $ARGS | awk '{print $1}')"
-
+# Get user's pattern
+PATTERN="$(echo $ARGS | awk '{print $1}')"
+if [ "$PATTERN" != "" -a ! "$helpp" ]; then
   # Because we are not using $@, we have to use 'awk' in place of 'shift'
   ARGS="$(echo $ARGS | awk '{for (i=2;i<=NF;i++) printf "%s ", $i}')"
 
   if [ "$ARGS" != "" ]; then
-    # Get the included :: excluded files into $IN and $EX
+    # Separate the included and excluded files into $IN and $EX
     IN="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
     EX="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
     [ "$IN" = "" -a "$EX" = "" ] && IN="$ARGS"
@@ -37,11 +36,11 @@ if [ "$ARGS" != "" -a ! "$helpp" ]; then
     [ "$EF" != "" ] && EF="--exclude={$(echo $EF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
   fi
 
-  # if --list option is active, change the grep options from -H --line-number to --files-with-matches
+  # if --list option is active, show the files that are affected instead
   if [ "$list" ]; then
-    cmd="grep $OPTS --recursive -I --context=3 --color=always --regexp=\"$PATTERN\" * $ID $IF $ED $EF --files-with-matches | less -RiMSFX#4"
+    cmd="grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$PATTERN\" * $ID $IF $ED $EF --files-with-matches | less -RiMSFX#4"
   else
-    cmd="grep $OPTS --recursive -I --context=3 --color=always --regexp=\"$PATTERN\" * $ID $IF $ED $EF -H --line-number | less -RiMSFX#4"
+    cmd="grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$PATTERN\" * $ID $IF $ED $EF -H --line-number | less -RiMSFX#4"
   fi;
 
   # if --describe option is active, print the command instead of executing it
