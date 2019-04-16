@@ -15,8 +15,8 @@ if [ "$ARGS" != "" -a ! "$helpp" ]; then
   # Get user's pattern
   PATTERN="$(echo $ARGS | awk '{print $1}')"
 
-  # 'shift' $ARGS accordingly
-  ARGS="$(echo $ARGS | awk '{for (i=2; i<=NF; i++) printf "%s ", $i}')"
+  # Because we are not using $@, we have to use 'awk' in place of 'shift'
+  ARGS="$(echo $ARGS | awk '{for (i=2;i<=NF;i++) printf "%s ", $i}')"
 
   if [ "$ARGS" != "" ]; then
     # Get the included :: excluded files into $IN and $EX

@@ -1,4 +1,4 @@
-```bash
+```
    Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]
 
    Search for <pattern> within [INCLUDED] files, ignoring [EXCLUDED] files.
