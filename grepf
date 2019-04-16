@@ -5,12 +5,13 @@ for i in "$@"; do
   case $i in
     --list) list="true" ;;
     --describe) describe="true" ;;
+    -h|--h|--help) helpp="true" ;;
     -*|--*) OPTS="$OPTS $i" ;;
     *) ARGS="$ARGS $i" ;;
   esac
 done
 
-if [ "$ARGS" != "" ]; then
+if [ "$ARGS" != "" -a ! "$helpp" ]; then
   # Get user's pattern
   PATTERN="$(echo $ARGS | awk '{print $1}')"
 
@@ -51,7 +52,7 @@ else
   echo "   Search for <pattern> within [INCLUDED] files, ignoring [EXCLUDED] files."
   echo "   [INCLUDED] files are separated from [EXCLUDED] files by a '::'."
   echo "   When omitted, [INCLUDED] is the current dir and [EXCLUDED] is empty."
-  echo "   Any [--OPTION] you can pass to grep, you can pass to grepf as well"
+  echo "   Any [--OPTIONS] you can pass to grep, you can pass to grepf as well"
   echo
   echo "   Examples:"
   echo "      grepf pattern"
@@ -59,8 +60,9 @@ else
   echo "      grepf pattern file1.txt folder1/ :: folder1/file2.txt"
   echo "      grepf pattern :: file1.txt **/*.log"
   echo
-  echo "   Options:"
+  echo "   Options(only for grepf):"
   echo "      --list       Instead of showing each match, show an overview of which files"
   echo "                   were matched"
   echo "      --describe   Show the full command that grepf transforms into."
+  echo "      --help       Show this help"
 fi
