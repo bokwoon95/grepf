@@ -19,7 +19,7 @@ done
 
 if [ "$ARGS" != "" ]; then
   PATTERN="$(echo $ARGS | awk '{print $1}')"
-  ARGS="$(echo $ARGS | awk '{for (i=2; i<=NF; i++) print $i}')"
+  ARGS="$(echo $ARGS | awk '{for (i=2; i<=NF; i++) printf "%s ", $i}')"
   if [ "$ARGS" != "" ]; then
     IN="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
     EX="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
