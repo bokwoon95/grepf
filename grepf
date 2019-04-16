@@ -1,10 +1,28 @@
 #!/usr/bin/env bash
 
-if [ "$#" -ge 1 ]; then
-  PATTERN="$1"; shift
-  if [ "$#" -gt 0 ]; then
-    IN="$(echo "$@" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
-    EX="$(echo "$@" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
+for i in "$@"; do
+  case $i in
+    --list)
+      list="true"
+      ;;
+    --describe)
+      describe="true"
+      ;;
+    -*|--*)
+      OPTS="$OPTS $i"
+      ;;
+    *)
+      ARGS="$ARGS $i"
+      ;;
+  esac
+done
+
+if [ "$ARGS" != "" ]; then
+  PATTERN="$(echo $ARGS | awk '{print $1}')"
+  ARGS="$(echo $ARGS | awk '{for (i=2; i<=NF; i++) print $i}')"
+  if [ "$ARGS" != "" ]; then
+    IN="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
+    EX="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
     [ "$IN" = "" -a "$EX" = "" ] && IN="$@"
     [ "$IN" = "" -o "$IN" = "::" ] && IN=""
   fi
@@ -16,7 +34,13 @@ if [ "$#" -ge 1 ]; then
   [ "$IF" != "" ] && IF="--include={$(echo $IF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
   [ "$ED" != "" ] && ED="--exclude-dir={$(echo $ED | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
   [ "$EF" != "" ] && EF="--exclude={$(echo $EF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-  eval "grep -rEIHn --context=3 --color=always -e \"$PATTERN\" * $ID $IF $ED $EF | less -RiMSFX#4"
+
+  if [ "$list" ]; then
+    cmd="grep -rEIl --context=3 --color=always -e \"$PATTERN\" * $ID $IF $ED $EF | less -RiMSFX#4"
+  else
+    cmd="grep -rEIHn --context=3 --color=always -e \"$PATTERN\" * $ID $IF $ED $EF | less -RiMSFX#4"
+  fi;
+  if [ "$describe" ]; then echo "$cmd"; else eval "$cmd"; fi
 else
   echo "   Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...]"
   echo
@@ -31,7 +55,7 @@ else
   echo "      grepf pattern :: file1.txt **/*.log"
   echo
   echo "   Options:"
-  echo "      --info       Instead of showing each match, show an overview of which files"
-  echo "                   were matched and how many matches each file."
-  echo "      --showcmd    Show the full command that grepf transforms into."
+  echo "      --list       Instead of showing each match, show an overview of which files"
+  echo "                   were matched"
+  echo "      --describe   Show the full command that grepf transforms into."
 fi
