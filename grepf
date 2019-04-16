@@ -1,45 +1,49 @@
 #!/usr/bin/env bash
 
+# Extract '--options/-o' into $OPTS and dump the rest into $ARGS
 for i in "$@"; do
   case $i in
-    --list)
-      list="true"
-      ;;
-    --describe)
-      describe="true"
-      ;;
-    -*|--*)
-      OPTS="$OPTS $i"
-      ;;
-    *)
-      ARGS="$ARGS $i"
-      ;;
+    --list) list="true" ;;
+    --describe) describe="true" ;;
+    -*|--*) OPTS="$OPTS $i" ;;
+    *) ARGS="$ARGS $i" ;;
   esac
 done
 
 if [ "$ARGS" != "" ]; then
+  # Get user's pattern
   PATTERN="$(echo $ARGS | awk '{print $1}')"
+
+  # 'shift' $ARGS accordingly
   ARGS="$(echo $ARGS | awk '{for (i=2; i<=NF; i++) printf "%s ", $i}')"
+
   if [ "$ARGS" != "" ]; then
+    # Get the included :: excluded files into $IN and $EX
     IN="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
     EX="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
     [ "$IN" = "" -a "$EX" = "" ] && IN="$@"
     [ "$IN" = "" -o "$IN" = "::" ] && IN=""
-  fi
-  ID="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1)}')"
-  IF="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
-  ED="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1) }')"
-  EF="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
-  [ "$ID" != "" ] && ID="--include-dir={$(echo $ID | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-  [ "$IF" != "" ] && IF="--include={$(echo $IF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-  [ "$ED" != "" ] && ED="--exclude-dir={$(echo $ED | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-  [ "$EF" != "" ] && EF="--exclude={$(echo $EF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
 
+    # Filter $IN into $IF & $ID depending on whether it's a File or Dir
+    # Filter $EX into $EF & $ED depending on whether it's a File or Dir
+    ID="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1)}')"
+    IF="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
+    ED="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1) }')"
+    EF="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
+    [ "$ID" != "" ] && ID="--include-dir={$(echo $ID | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    [ "$IF" != "" ] && IF="--include={$(echo $IF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    [ "$ED" != "" ] && ED="--exclude-dir={$(echo $ED | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+    [ "$EF" != "" ] && EF="--exclude={$(echo $EF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
+  fi
+
+  # if --list option is active, change the grep options from -H --line-number to --files-with-matches
   if [ "$list" ]; then
     cmd="grep $OPTS --recursive -I --context=3 --color=always --regexp=\"$PATTERN\" * $ID $IF $ED $EF --files-with-matches | less -RiMSFX#4"
   else
     cmd="grep $OPTS --recursive -I --context=3 --color=always --regexp=\"$PATTERN\" * $ID $IF $ED $EF -H --line-number | less -RiMSFX#4"
   fi;
+
+  # if --describe option is active, print the command instead of executing it
   if [ "$describe" ]; then echo "$cmd"; else eval "$cmd"; fi
 else
   echo "   Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...]"
