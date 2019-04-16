@@ -22,7 +22,7 @@ if [ "$ARGS" != "" -a ! "$helpp" ]; then
     # Get the included :: excluded files into $IN and $EX
     IN="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
     EX="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
-    [ "$IN" = "" -a "$EX" = "" ] && IN="$@"
+    [ "$IN" = "" -a "$EX" = "" ] && IN="$ARGS"
     [ "$IN" = "" -o "$IN" = "::" ] && IN=""
 
     # Filter $IN into $IF & $ID depending on whether it's a File or Dir
