@@ -46,11 +46,12 @@ if [ "$ARGS" != "" ]; then
   # if --describe option is active, print the command instead of executing it
   if [ "$describe" ]; then echo "$cmd"; else eval "$cmd"; fi
 else
-  echo "   Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...]"
+  echo "   Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]"
   echo
-  echo "   Search for <pattern> within <INCLUDED> files, ignoring <EXCLUDED> files."
-  echo "   <INCLUDED> files are separated from <EXCLUDED> files by a '::'."
-  echo "   When omitted, <INCLUDED> is the current dir and <EXCLUDED> is empty."
+  echo "   Search for <pattern> within [INCLUDED] files, ignoring [EXCLUDED] files."
+  echo "   [INCLUDED] files are separated from [EXCLUDED] files by a '::'."
+  echo "   When omitted, [INCLUDED] is the current dir and [EXCLUDED] is empty."
+  echo "   Any [--OPTION] you can pass to grep, you can pass to grepf as well"
   echo
   echo "   Examples:"
   echo "      grepf pattern"
