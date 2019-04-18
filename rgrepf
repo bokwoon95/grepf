@@ -2,9 +2,10 @@
 
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
-  if [ "$1" = "--list" ];                                  then List="true"
+  if [ "$1" = "--list" -o "$1" = "--l" ];                  then List="true"
   elif [ "$1" = "--describe" ];                            then Describe="true"
   elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
+  elif [ "$1" = "--raw" ];                                 then Raw="true"
   elif [ "$(echo $1 | cut -c1-1)" = "-" ];                 then OPTS="$(echo $OPTS $1 | xargs)"
   elif [ "$1" = "::" ];                                    then exclude_active="true"
   elif [ "$OLD" = "" -a "$NEW" = "" ];                     then OLD="\"$1\""
@@ -14,20 +15,21 @@ while [ "$i" -lt "$argc" ]; do
     if [ "$isdir" ]; then arg="$(echo $1 | sed 's/.$//')"; else arg="$1"; fi
     if [ "$exclude_active" ]; then
       if [ "$isdir" ]; then
-        ED="$(echo $ED --exclude-dir=\"$arg\")"
+        ED="$ED --exclude-dir=\"$arg\""
       else
-        EF="$(echo $EF --exclude=\"$arg\")"
+        EF="$EF --exclude=\"$arg\""
       fi
     else
       if [ "$isdir" ]; then
-        ID="$(echo $ID \"$arg\")"
+        ID="$ID \"$arg\""
       else
-        IF="$(echo $IF \"$arg\")"
+        IF="$IF \"$arg\""
       fi
     fi
   fi
   shift;: "$((i=i+1))"
 done
+[ -z "$Raw" ] && ED="$ED --exclude-dir=\".git\""
 [ "$ID$IF" = "" ] && ID="."
 
 # [ "$List" ] && echo "--list is active"
@@ -76,21 +78,3 @@ else
   echo "      --describe   Show the full command that grepf transforms into."
   echo "      --help       Show this help"
 fi
-
-rgrepf () {
-  eval "grep -rEIl \"$OLD\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | xargs perl -pi -e \"s!$OLD!$NEW!g\""
-
-  eval "grep -rEIHn --context=3 --color=always -e \"$NEW\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | less -RiMSFX#4"
-  echo "   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...]"
-  echo
-  echo "   Search and replace <old> with <new> in <INCLUDED> files, ignoring <EXCLUDED> files."
-  echo "   <INCLUDED> files are separated from <EXCLUDED> files by a '::'."
-  echo "   When omitted, <INCLUDED> is the current dir and <EXCLUDED> is empty."
-  echo "   Note: If '!' appears in <old> or <new>, it must be escaped i.e. '\\!'"
-  echo
-  echo "   Examples:"
-  echo "      rgrepf old new"
-  echo "      rgrepf old new *.py"
-  echo "      rgrepf old new file1.txt folder1/ :: folder1/file2.txt"
-  echo "      rgrepf old new :: file1.txt **/*.log"
-}

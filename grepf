@@ -2,13 +2,13 @@
 
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
-  if [ "$1" = "--list" ];                                  then List="true"
+  if [ "$1" = "--list" -o "$1" = "--l" ];                  then List="true"
   elif [ "$1" = "--describe" ];                            then Describe="true"
   elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
-  elif [ "$1" = "--git" ];                                 then Git="true"
+  elif [ "$1" = "--raw" ];                                 then Raw="true"
   elif [ "$(echo $1 | cut -c1-1)" = "-" ];                 then OPTS="$(echo $OPTS $1 | xargs)"
-  elif [ -z "$PATTERN" -a "$1" != "::" ];                  then PATTERN="\"$1\""
   elif [ "$1" = "::" ];                                    then exclude_active="true"
+  elif [ -z "$PATTERN" -a "$1" != "::" ];                  then PATTERN="\"$1\""
   else
     isdir=""; [ "$(echo -n $1 | tail -c1)" = "/" ] && isdir="true"
     if [ "$isdir" ]; then arg="$(echo $1 | sed 's/.$//')"; else arg="$1"; fi
@@ -28,6 +28,7 @@ while [ "$i" -lt "$argc" ]; do
   fi
   shift;: "$((i=i+1))"
 done
+[ -z "$Raw" ] && ED="$ED --exclude-dir=\".git\""
 [ "$ID$IF" = "" ] && ID="."
 
 # [ "$List" ] && echo "--list is active"
