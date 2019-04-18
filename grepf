@@ -57,6 +57,7 @@ else
   echo "   [INCLUDED] files are separated from [EXCLUDED] files by a '::'."
   echo "   When omitted, [INCLUDED] is the current dir and [EXCLUDED] is empty."
   echo "   Any [--OPTIONS] you can pass to grep, you can pass to grepf as well"
+  echo "   Note: If '!' appears in <old> or <new>, it must be escaped i.e. '\\!'"
   echo
   echo "   Examples:"
   echo "      grepf pattern"

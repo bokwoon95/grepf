@@ -48,7 +48,7 @@ if [ "$OLD" != "" -a "$NEW" != "" -a ! "$Help" ]; then
   if [ "$List" ]; then
     cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
   else
-    cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$(echo $OLD|xargs)@$(echo $NEW|xargs)@g\""
+    cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s!$(echo $OLD|xargs)!$(echo $NEW|xargs)!g\""
   fi;
 
   if [ "$Describe" ]; then
@@ -64,7 +64,7 @@ else
   echo "   [INCLUDED] files are separated from [EXCLUDED] files by a '::'."
   echo "   When omitted, [INCLUDED] is the current dir and [EXCLUDED] is empty."
   echo "   Any [--OPTIONS] you can pass to grep, you can pass to grepf as well"
-  echo "   Note: If '@' appears in <old> or <new>, it must be escaped i.e. '\\@'"
+  echo "   Note: If '!' appears in <old> or <new>, it must be escaped i.e. '\\!'"
   echo
   echo "   Examples:"
   echo "      rgrepf old new"
