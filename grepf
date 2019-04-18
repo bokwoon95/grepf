@@ -62,9 +62,9 @@ else
   echo
   echo "   Examples:"
   echo "      grepf pattern"
-  echo "      grepf pattern \"*.py\""
+  echo "      grepf pattern '*.py'"
   echo "      grepf pattern file1.txt folder1/ :: folder1/file2.txt"
-  echo "      grepf pattern :: file1.txt \"**/*.log\""
+  echo "      grepf pattern :: file1.txt '**/*.log'"
   echo
   echo "   Options(only for grepf):"
   echo "      --list       Instead of showing each match, show an overview of which files"
