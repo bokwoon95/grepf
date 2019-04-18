@@ -1,50 +1,51 @@
 #!/usr/bin/env bash
 
-# Extract '--options/-o' into $OPTS and dump the rest into $ARGS
-for i in "$@"; do
-  case $i in
-    --list) list="true" ;;
-    --describe) describe="true" ;;
-    -h|--h|--help) helpp="true" ;;
-    -*|--*) OPTS="$OPTS $i" ;;
-    *) ARGS="$ARGS $i" ;;
-  esac
-done
-
-# Get user's pattern
-PATTERN="$(echo $ARGS | awk '{print $1}')"
-if [ "$PATTERN" != "" -a ! "$helpp" ]; then
-  # Because we are not using $@, we have to use 'awk' in place of 'shift'
-  ARGS="$(echo $ARGS | awk '{for (i=2;i<=NF;i++) printf "%s ", $i}')"
-
-  if [ "$ARGS" != "" ]; then
-    # Separate the included and excluded files into $IN and $EX
-    IN="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
-    EX="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
-    [ "$IN" = "" -a "$EX" = "" ] && IN="$ARGS"
-    [ "$IN" = "" -o "$IN" = "::" ] && IN=""
-
-    # Filter $IN into $IF & $ID depending on whether it's a File or Dir
-    # Filter $EX into $EF & $ED depending on whether it's a File or Dir
-    ID="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1)}')"
-    IF="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
-    ED="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1) }')"
-    EF="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
-    [ "$ID" != "" ] && ID="--include-dir={$(echo $ID | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    [ "$IF" != "" ] && IF="--include={$(echo $IF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    [ "$ED" != "" ] && ED="--exclude-dir={$(echo $ED | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    [ "$EF" != "" ] && EF="--exclude={$(echo $EF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-  fi
-
-  # if --list option is active, show the files that are affected instead
-  if [ "$list" ]; then
-    cmd="grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$PATTERN\" * $ID $IF $ED $EF --files-with-matches | less -RiMSFX#4"
+argc="$#";: "$((i=0))"
+while [ "$i" -lt "$argc" ]; do
+  if [ "$1" = "--list" ];                                  then List="true"
+  elif [ "$1" = "--describe" ];                            then Describe="true"
+  elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
+  elif [ "$(echo $1 | cut -c1-1)" = "-" ];                 then OPTS="$(echo $OPTS $1 | xargs)"
+  elif [ -z "$PATTERN" -a "$1" != "::" ];                  then PATTERN="\"$1\""
+  elif [ "$1" = "::" ];                                    then exclude_active="true"
   else
-    cmd="grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$PATTERN\" * $ID $IF $ED $EF -H --line-number | less -RiMSFX#4"
-  fi;
+    isdir=""; [ "$(echo -n $1 | tail -c1)" = "/" ] && isdir="true"
+    if [ "$exclude_active" ]; then
+      if [ "$isdir" ]; then
+        ED="$(echo $ED --exclude-dir=\"$1\")"
+      else
+        EF="$(echo $EF --exclude=\"$1\")"
+      fi
+    else
+      if [ "$isdir" ]; then
+        ID="$(echo $ID \"$1\")"
+      else
+        IF="$(echo $IF \"$1\")"
+      fi
+    fi
+  fi
+  shift;: "$((i=i+1))"
+done
+[ "$ID$IF" = "" ] && ID="."
 
-  # if --describe option is active, print the command instead of executing it
-  if [ "$describe" ]; then echo "$cmd"; else eval "$cmd"; fi
+# [ "$List" ] && echo "--list is active"
+# [ "$Describe" ] && echo "--describe is active"
+# [ "$Help" ] && echo "--help is active"
+# echo "PATTERN is $PATTERN"
+# echo "ED is $ED"
+# echo "EF is $EF"
+# echo "ID is $ID"
+# echo "IF is $IF"
+# echo "OPTS are $OPTS"
+# exit 0
+
+if [ "$PATTERN" != "" -a ! "$Help" ]; then
+  if [ "$List" ]; then
+    cmd="grep $OPTS -rEIl --context=3 --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4"
+  else
+    cmd="grep $OPTS -rEIHn --context=3 --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4"
+  fi;
+  if [ "$Describe" ]; then echo "$cmd"; else eval "$cmd"; fi
 else
   echo "   Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]"
   echo
