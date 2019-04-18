@@ -4,8 +4,8 @@ argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
   if [ "$1" = "--list" -o "$1" = "--l" ];                  then List="true"
   elif [ "$1" = "--describe" -o "$1" = "--desc" ];         then Describe="true"
-  elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
   elif [ "$1" = "--raw" ];                                 then Raw="true"
+  elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
   elif [ "$(echo $1 | cut -c1-1)" = "-" ];                 then OPTS="$(echo $OPTS $1 | xargs)"
   elif [ "$1" = "::" ];                                    then exclude_active="true"
   elif [ "$OLD" = "" -a "$NEW" = "" ];                     then OLD="\"$1\""
@@ -34,6 +34,7 @@ done
 
 # [ "$List" ] && echo "--list is active"
 # [ "$Describe" ] && echo "--describe is active"
+# [ "$Raw" ] && echo "--raw is active"
 # [ "$Help" ] && echo "--help is active"
 # echo "PATTERN is $PATTERN"
 # echo "ED is $ED"
@@ -54,7 +55,6 @@ if [ "$OLD" != "" -a "$NEW" != "" -a ! "$Help" ]; then
     echo "$cmd";
   else
     eval "$cmd";
-    # Show the results of that find and replace
     eval "grep $OPTS -rEIHn --context=3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
   fi
 else
@@ -76,5 +76,7 @@ else
   echo "      --list       Instead of showing each match, show an overview of which files"
   echo "                   were matched"
   echo "      --describe   Show the full command that grepf transforms into."
+  echo "      --raw        Raw unfiltered searches i.e. .git/ is filtered by default, this"
+  echo "                   turns it off"
   echo "      --help       Show this help"
 fi
