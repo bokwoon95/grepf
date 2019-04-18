@@ -58,12 +58,13 @@ else
   echo "   When omitted, [INCLUDED] is the current dir and [EXCLUDED] is empty."
   echo "   Any [--OPTIONS] you can pass to grep, you can pass to grepf as well"
   echo "   Note: If '!' appears in <old> or <new>, it must be escaped i.e. '\\!'"
+  echo "         and you must use single quotes, not double quotes with '\\!'"
   echo
   echo "   Examples:"
   echo "      grepf pattern"
-  echo "      grepf pattern *.py"
+  echo "      grepf pattern \"*.py\""
   echo "      grepf pattern file1.txt folder1/ :: folder1/file2.txt"
-  echo "      grepf pattern :: file1.txt **/*.log"
+  echo "      grepf pattern :: file1.txt \"**/*.log\""
   echo
   echo "   Options(only for grepf):"
   echo "      --list       Instead of showing each match, show an overview of which files"
