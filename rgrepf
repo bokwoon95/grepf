@@ -3,7 +3,7 @@
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
   if [ "$1" = "--list" -o "$1" = "--l" ];                  then List="true"
-  elif [ "$1" = "--describe" ];                            then Describe="true"
+  elif [ "$1" = "--describe" -o "$1" = "--desc" ];         then Describe="true"
   elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
   elif [ "$1" = "--raw" ];                                 then Raw="true"
   elif [ "$(echo $1 | cut -c1-1)" = "-" ];                 then OPTS="$(echo $OPTS $1 | xargs)"
