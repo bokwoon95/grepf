@@ -10,17 +10,18 @@ while [ "$i" -lt "$argc" ]; do
   elif [ "$1" = "::" ];                                    then exclude_active="true"
   else
     isdir=""; [ "$(echo -n $1 | tail -c1)" = "/" ] && isdir="true"
+    if [ "$isdir" ]; then arg="$(echo $1 | sed 's/.$//')"; else arg="$1"; fi
     if [ "$exclude_active" ]; then
       if [ "$isdir" ]; then
-        ED="$(echo $ED --exclude-dir=\"$1\")"
+        ED="$(echo $ED --exclude-dir=\"$arg\")"
       else
-        EF="$(echo $EF --exclude=\"$1\")"
+        EF="$(echo $EF --exclude=\"$arg\")"
       fi
     else
       if [ "$isdir" ]; then
-        ID="$(echo $ID \"$1\")"
+        ID="$(echo $ID \"$arg\")"
       else
-        IF="$(echo $IF \"$1\")"
+        IF="$(echo $IF \"$arg\")"
       fi
     fi
   fi

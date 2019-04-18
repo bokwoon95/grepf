@@ -1,56 +1,59 @@
 #!/usr/bin/env bash
 
-# Extract '--options/-o' into $OPTS and dump the rest into $ARGS
-for i in "$@"; do
-  case $i in
-    --list) list="true" ;;
-    --describe) describe="true" ;;
-    -h|--h|--help) helpp="true" ;;
-    -*|--*) OPTS="$OPTS $i" ;;
-    *) ARGS="$ARGS $i" ;;
-  esac
-done
-
-# Get user's pattern
-OLD="$(echo $ARGS | awk '{print $1}')"
-NEW="$(echo $ARGS | awk '{print $2}')"
-if [ "$OLD" != "" -a "$NEW" != "" -a ! "$helpp" ]; then
-  # Because we are not using $@, we have to use 'awk' in place of 'shift'
-  ARGS="$(echo $ARGS | awk '{for (i=3;i<=NF;i++) printf "%s ", $i}')"
-
-  if [ "$ARGS" != "" ]; then
-    # Separate the included and excluded files into $IN and $EX
-    IN="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\1/p")"
-    EX="$(echo "$ARGS" | sed -n "s/\(.*\)::\(.*\)/\2/p")"
-    [ "$IN" = "" -a "$EX" = "" ] && IN="$ARGS"
-    [ "$IN" = "" -o "$IN" = "::" ] && IN=""
-
-    # Filter $IN into $IF & $ID depending on whether it's a File or Dir
-    # Filter $EX into $EF & $ED depending on whether it's a File or Dir
-    ID="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1)}')"
-    IF="$(echo "$IN" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
-    ED="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /\/$/) printf "%s ", substr($i,1,length($i)-1) }')"
-    EF="$(echo "$EX" | awk '{for (i=1;i<=NF;i++) if ($i ~ /[^\/]$/) printf "%s ", $i}')"
-    [ "$ID" != "" ] && ID="--include-dir={$(echo $ID | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    [ "$IF" != "" ] && IF="--include={$(echo $IF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    [ "$ED" != "" ] && ED="--exclude-dir={$(echo $ED | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-    [ "$EF" != "" ] && EF="--exclude={$(echo $EF | awk -v OFS="," '$1=$1' | sed 's/$/,/')}"
-  fi
-
-  # if --list option is active, show the files that are affected instead
-  if [ "$list" ]; then
-    cmd="grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$OLD\" * $ID $IF $ED $EF --files-with-matches | less -RiMSFX#4"
+argc="$#";: "$((i=0))"
+while [ "$i" -lt "$argc" ]; do
+  if [ "$1" = "--list" ];                                  then List="true"
+  elif [ "$1" = "--describe" ];                            then Describe="true"
+  elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
+  elif [ "$(echo $1 | cut -c1-1)" = "-" ];                 then OPTS="$(echo $OPTS $1 | xargs)"
+  elif [ "$1" = "::" ];                                    then exclude_active="true"
+  elif [ "$OLD" = "" -a "$NEW" = "" ];                     then OLD="\"$1\""
+  elif [ "$OLD" -a "$NEW" = "" ];                          then NEW="\"$1\""
   else
-    cmd="grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$OLD\" * $ID $IF $ED $EF --files-with-matches --null | xargs -0 perl -pi -e \"s@$OLD@$NEW@g\""
+    isdir=""; [ "$(echo -n $1 | tail -c1)" = "/" ] && isdir="true"
+    if [ "$isdir" ]; then arg="$(echo $1 | sed 's/.$//')"; else arg="$1"; fi
+    if [ "$exclude_active" ]; then
+      if [ "$isdir" ]; then
+        ED="$(echo $ED --exclude-dir=\"$arg\")"
+      else
+        EF="$(echo $EF --exclude=\"$arg\")"
+      fi
+    else
+      if [ "$isdir" ]; then
+        ID="$(echo $ID \"$arg\")"
+      else
+        IF="$(echo $IF \"$arg\")"
+      fi
+    fi
+  fi
+  shift;: "$((i=i+1))"
+done
+[ "$ID$IF" = "" ] && ID="."
+
+# [ "$List" ] && echo "--list is active"
+# [ "$Describe" ] && echo "--describe is active"
+# [ "$Help" ] && echo "--help is active"
+# echo "PATTERN is $PATTERN"
+# echo "ED is $ED"
+# echo "EF is $EF"
+# echo "ID is $ID"
+# echo "IF is $IF"
+# echo "OPTS are $OPTS"
+# exit 0
+
+if [ "$OLD" != "" -a "$NEW" != "" -a ! "$Help" ]; then
+  if [ "$List" ]; then
+    cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
+  else
+    cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$(echo $OLD|xargs)@$(echo $NEW|xargs)@g\""
   fi;
 
-  # if --describe option is active, print the command instead of executing it
-  if [ "$describe" ]; then
+  if [ "$Describe" ]; then
     echo "$cmd";
   else
     eval "$cmd";
     # Show the results of that find and replace
-    eval "grep $OPTS --recursive -I --context=3 --color=always --extended-regexp --regexp=\"$NEW\" * $ID $IF $ED $EF -H --line-number | less -RiMSFX#4"
+    eval "grep $OPTS -rEIHn --context=3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
   fi
 else
   echo "   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]"
@@ -75,7 +78,7 @@ else
 fi
 
 rgrepf () {
-  eval "grep -rEIl \"$OLD\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | xargs perl -pi -e \"s@$OLD@$NEW@g\""
+  eval "grep -rEIl \"$OLD\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | xargs perl -pi -e \"s!$OLD!$NEW!g\""
 
   eval "grep -rEIHn --context=3 --color=always -e \"$NEW\" * $INCLUDED_DIRS $INCLUDED_FILES $EXCLUDED_DIRS $EXCLUDED_FILES | less -RiMSFX#4"
   echo "   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...]"
@@ -83,7 +86,7 @@ rgrepf () {
   echo "   Search and replace <old> with <new> in <INCLUDED> files, ignoring <EXCLUDED> files."
   echo "   <INCLUDED> files are separated from <EXCLUDED> files by a '::'."
   echo "   When omitted, <INCLUDED> is the current dir and <EXCLUDED> is empty."
-  echo "   Note: If '@' appears in <old> or <new>, it must be escaped i.e. '\\@'"
+  echo "   Note: If '!' appears in <old> or <new>, it must be escaped i.e. '\\!'"
   echo
   echo "   Examples:"
   echo "      rgrepf old new"
