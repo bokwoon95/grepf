@@ -9,7 +9,7 @@ while [ "$i" -lt "$argc" ]; do
   elif [ "$1" = "--describe" ];                            then Describe="true"
   elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
   elif [ "$(echo $1 | cut -c1-1)" = "-" ];                 then OPTS="$(echo $OPTS $1 | xargs)"
-  elif [ -z "$PATTERN" ];                                  then PATTERN="\"$1\""
+  elif [ -z "$PATTERN" -a "$1" != "::" ];                  then PATTERN="\"$1\""
   elif [ "$1" = "::" ];                                    then exclude_active="true"
   else
     isdir=""; [ "$(echo -n $1 | tail -c1)" = "/" ] && isdir="true"
