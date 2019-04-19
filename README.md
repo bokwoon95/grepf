@@ -1,6 +1,12 @@
 [![asciicast](https://asciinema.org/a/w5Dw52mj2dupFGMnOGfWRxIr1.svg)](https://asciinema.org/a/w5Dw52mj2dupFGMnOGfWRxIr1)
 
-## Search only
+## Installation
+To install `grepf` and `rgrepf`, run this command
+```
+bash -c "$(curl https://raw.githubusercontent.com/bokwoon95/grepf/master/install)"
+```
+
+## Search only: `grepf`
 ```
    Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]
 
@@ -26,7 +32,7 @@
       If in doubt, wrap it in single quotes 'like this'
 ```
 
-## Search and Replace
+## Search and Replace: `rgrepf`
 ```
    Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]
 
