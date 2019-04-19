@@ -1,3 +1,4 @@
+## Search only
 ```
    Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]
 
@@ -23,8 +24,9 @@
       If in doubt, wrap it in single quotes 'like this'
 ```
 
+## Search and Replace
 ```
-      Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]
+   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]
 
    Search and replace <old> with <new> in [INCLUDED] files, ignoring [EXCLUDED] files.
    [INCLUDED] files are separated from [EXCLUDED] files by a '::'.
