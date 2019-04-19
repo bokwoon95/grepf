@@ -2,15 +2,23 @@
 
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
-  if [ "$(echo $1 | grep "'")" ]; then echo 'Sorry, searching for single quotes is not supported yet'; exit 1; fi
-  if [ "$1" = '--list' -o "$1" = '--l' ];                  then List='true'
-  elif [ "$1" = '--describe' -o "$1" = '--desc' ];         then Describe='true'
-  elif [ "$1" = '--raw' ];                                 then Raw='true'
-  elif [ "$1" = '--help' -o "$1" = '-h' -o "$1" = '--h' ]; then Help='true'
-  elif [ "$(echo $1 | cut -c1-1)" = '-' ];                 then OPTS="$OPTS $1"
-  elif [ "$1" = '::' ];                                    then exclude_active='true'
-  elif [ "$OLD" = '' -a "$NEW" = '' ];                     then OLD="$(printf "'%q'" $1)"
-  elif [ "$OLD" -a "$NEW" = '' ];                          then NEW="$(printf "'%q'" $1)"
+  [ "$(echo $1 | grep "'")" ] && sq='true'
+  if [ "$1" = '--list' ] || [ "$1" = '--l' ];                      then List='true'
+  elif [ "$1" = '--describe' ] || [ "$1" = '--desc' ];             then Describe='true'
+  elif [ "$1" = '--raw' ];                                         then Raw='true'
+  elif [ "$1" = '--help' ] || [ "$1" = '-h' ] || [ "$1" = '--h' ]; then Help='true'
+  elif [ "$(echo $1 | cut -c1-1)" = '-' ];                         then OPTS="$OPTS $1"
+  elif [ "$1" = '::' ];                                            then exclude_active='true'
+  elif [ "$OLD" = '' ] && [ "$NEW" = '' ]; then 
+    if [ "$sq" ];
+    then OLD="$(printf "\"%q\"" $1)";
+    else OLD="$(printf "'%q'" $1)";
+    fi
+  elif [ "$OLD" ] && [ "$NEW" = '' ]; then 
+    if [ "$sq" ];
+    then NEW="$(printf "\"%q\"" $1)";
+    else NEW="$(printf "'%q'" $1)";
+    fi
   else
     isdir=''; [ "$(echo -n $1 | tail -c1)" = '/' ] && isdir='true'
     if [ "$isdir" ]; then arg="$(echo $1 | sed 's/.$//')"; else arg="$1"; fi
@@ -45,7 +53,7 @@ done
 # echo "OPTS are $OPTS"
 # exit 0
 
-if [ "$OLD" != "" -a "$NEW" != "" -a ! "$Help" ]; then
+if [ "$OLD" != "" ] && [ "$NEW" != "" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
     cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
   else
