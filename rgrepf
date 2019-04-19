@@ -11,13 +11,13 @@ while [ "$i" -lt "$argc" ]; do
   elif [ "$1" = '::' ];                                          then exclude_active='true'
   elif [ "$OLD" = '' ] && [ "$NEW" = '' ]; then 
     if [ "$sq" ];
-    then OLD="$(printf "\"%q\"" $1)";
-    else OLD="$(printf "'%q'" $1)";
+    then OLD="$(printf "\"%q\"" "$1")";
+    else OLD="$(printf "'%q'" "$1")";
     fi
   elif [ "$OLD" ] && [ "$NEW" = '' ]; then 
     if [ "$sq" ];
-    then NEW="$(printf "\"%q\"" $1)";
-    else NEW="$(printf "'%q'" $1)";
+    then NEW="$(printf "\"%q\"" "$1")";
+    else NEW="$(printf "'%q'" "$1")";
     fi
   else
     isdir=''; [ "$(echo -n $1 | tail -c1)" = '/' ] && isdir='true'
@@ -30,9 +30,9 @@ while [ "$i" -lt "$argc" ]; do
       fi
     else
       if [ "$isdir" ]; then
-        ID="$(printf "$ID '%q'" $arg)"
+        ID="$(printf "$ID '%q'" "$arg")"
       else
-        IF="$(printf "$IF '%q'" $arg)"
+        IF="$(printf "$IF '%q'" "$arg")"
       fi
     fi
   fi
@@ -58,7 +58,7 @@ if [ "$OLD" != "" ] && [ "$NEW" != "" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
     cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
   else
-    cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s!$(echo $OLD|xargs)!$(echo $NEW|xargs)!g\""
+    cmd="grep $OPTS -rEIl --context=3 -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$(echo $OLD|xargs)!$(echo $NEW|xargs)!g'"
   fi;
   if [ "$Describe" ]; then
     echo "$cmd";

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+rm -rf test/ best/
 mkdir -p test; cd test
 mkdir 1 2 3
 touch a.txt b.txt c.txt d.md e.md f.md

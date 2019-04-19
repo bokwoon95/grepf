@@ -11,8 +11,8 @@ while [ "$i" -lt "$argc" ]; do
   elif [ "$1" = '::' ];                                          then exclude_active='true'
   elif [ "$PATTERN" = '' ]; then
     if [ "$sq" ];
-    then PATTERN="$(printf "\"%q\"" $1)";
-    else PATTERN="$(printf "'%q'" $1)";
+    then PATTERN="$(printf "\"%q\"" "$1")";
+    else PATTERN="$(printf "'%q'" "$1")";
     fi
   else
     isdir=''; [ "$(echo -n $1 | tail -c1)" = '/' ] && isdir='true'
@@ -25,9 +25,9 @@ while [ "$i" -lt "$argc" ]; do
       fi
     else
       if [ "$isdir" ]; then
-        ID="$(echo $ID \'$arg\')"
+        ID="$(printf "$ID '%q'" "$arg")"
       else
-        IF="$(echo $IF \'$arg\')"
+        IF="$(printf "$IF '%q'" "$arg")"
       fi
     fi
   fi
