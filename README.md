@@ -13,8 +13,7 @@
 
    Options:
       --help       Show this help
-      --list       Instead of showing each match, show an overview of which files
-                   were matched
+      --list       List the files that are affected
       --describe   Show the full command that grepf transforms into
       --raw        Raw unfiltered searches i.e. .git/ is filtered by default, this
                    turns it off
