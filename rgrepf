@@ -20,13 +20,13 @@ while [ "$i" -lt "$argc" ]; do
   elif [ "$1" = '::' ];                                          then exclude_active='true'
   elif [ "$OLD" = '' ] && [ "$NEW" = '' ]; then 
     if [ "$sq" ];
-    then OLD="$(printf "\"%q\"" "$1")";
-    else OLD="$(printf "'%q'" "$1")";
+    then OLD="\"$1\"";
+    else OLD="'$1'";
     fi
   elif [ "$OLD" ] && [ "$NEW" = '' ]; then 
     if [ "$sq" ];
-    then NEW="$(printf "\"%q\"" "$1")";
-    else NEW="$(printf "'%q'" "$1")";
+    then NEW="\"$1\"";
+    else NEW="'$1'";
     fi
   else
     isdir=''; [ "$(echo -n "$1" | tail -c1)" = '/' ] && isdir='true'
@@ -35,21 +35,21 @@ while [ "$i" -lt "$argc" ]; do
       basearg="$(echo "$arg" | sed -ne 's!.*/\(.*\)$!\1!p')"
       if [ "$basearg" ] && [ "$grepprg" = 'gnu' ]; then
         if [ "$isdir" ];
-        then printf "\n   WARNING: GNU grep --exclude doesn't support '$arg/', use '$basearg/' instead\n\n"
-        else printf "\n   WARNING: GNU grep --exclude doesn't support '$arg', use '$basearg' instead\n\n"
+        then echo "   WARNING: GNU grep --exclude-dir doesn't support '$arg/', use '$basearg/' instead"
+        else echo "   WARNING: GNU grep --exclude doesn't support '$arg', use '$basearg' instead"
         fi
         warning='true'
       fi
       if [ "$isdir" ]; then
-        ED="$(echo $ED --exclude-dir=\'$arg\')" # don't use printf, don't want to escape wildcards in $arg
+        ED="$ED --exclude-dir='$arg'"
       else
-        EF="$(echo $EF --exclude=\'$arg\')" # don't use printf, don't want to escape wildcards in $arg
+        EF="$EF --exclude='$arg'"
       fi
     else
       if [ "$isdir" ]; then
-        ID="$(printf "$ID '%q'" "$arg")"
+        ID="$ID '$arg'"
       else
-        IF="$(printf "$IF '%q'" "$arg")"
+        IF="$IF '$arg'"
       fi
     fi
   fi
@@ -75,7 +75,9 @@ if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
     cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
   else
-    cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$(echo $OLD|xargs)!$(echo $NEW|xargs)!g'"
+    OLDE="$(echo "$OLD" | xargs | sed -e 's#\!#\\!#g')"
+    NEWE="$(echo "$NEW" | xargs | sed -e 's#\!#\\!#g')"
+    cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDE!$NEWE!g'"
   fi;
   [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then
