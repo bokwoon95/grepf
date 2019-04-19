@@ -13,7 +13,7 @@ fi
 ## Unpack script arguments ##
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
-  [ "$(echo "$1" | grep "'")" ] && sq='true'
+  sq=''; [ "$(echo "$1" | grep "'")" ] && sq='true'
   if [ "$1" = '--help' ] || [ "$1" = '-h' ] || [ "$1" = '--h' ]; then Help='true'
   elif [ "$1" = '--list' ] || [ "$1" = '--l' ];                  then List='true'
   elif [ "$1" = '--describe' ] || [ "$1" = '--desc' ];           then Describe='true'
@@ -76,7 +76,10 @@ if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
   else
     OLDE="$(echo "$OLD" | xargs | sed -e 's#\!#\\!#g')" # escape ! -> \!
     NEWE="$(echo "$NEW" | xargs | sed -e 's#\!#\\!#g')" # escape ! -> \!
-    cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDE!$NEWE!g'"
+    sq=''; [ "$(echo "$OLDE$NEWE" | grep "'")" ] && sq='true'
+    if [ "$sq" ];
+    then cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$OLDE@$NEWE@g\"";
+    else cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDE!$NEWE!g'"; fi
   fi;
   [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then
