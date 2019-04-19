@@ -67,9 +67,9 @@ done
 
 if [ "$PATTERN" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
-    cmd="grep $OPTS -rEIl --context=3 --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4"
+    cmd="grep $OPTS -rEIl --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4"
   else
-    cmd="grep $OPTS -rEIHn --context=3 --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4"
+    cmd="grep $OPTS -rEIHnC3 --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4"
   fi;
   [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then

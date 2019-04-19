@@ -73,16 +73,16 @@ done
 
 if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
-    cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
+    cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
   else
-    cmd="grep $OPTS -rEIl --context=3 -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$(echo $OLD|xargs)!$(echo $NEW|xargs)!g'"
+    cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$(echo $OLD|xargs)!$(echo $NEW|xargs)!g'"
   fi;
   [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then
     echo "$cmd";
   else
     eval "$cmd";
-    eval "grep $OPTS -rEIHn --context=3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
+    eval "grep $OPTS -rEIHnC3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
   fi
 else
   echo "   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]"
