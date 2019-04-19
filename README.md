@@ -12,12 +12,12 @@
       grepf pattern :: file1.txt '**/*.log'
 
    Options:
+      --help       Show this help
       --list       Instead of showing each match, show an overview of which files
                    were matched
       --describe   Show the full command that grepf transforms into
       --raw        Raw unfiltered searches i.e. .git/ is filtered by default, this
                    turns it off
-      --help       Show this help
 
    Note:
       Any [--OPTIONS] you can pass to grep, you can pass to grepf as well.

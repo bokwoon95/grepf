@@ -3,12 +3,12 @@
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
   [ "$(echo $1 | grep "'")" ] && sq='true'
-  if [ "$1" = '--list' ] || [ "$1" = '--l' ];                      then List='true'
-  elif [ "$1" = '--describe' ] || [ "$1" = '--desc' ];             then Describe='true'
-  elif [ "$1" = '--raw' ];                                         then Raw='true'
-  elif [ "$1" = '--help' ] || [ "$1" = '-h' ] || [ "$1" = '--h' ]; then Help='true'
-  elif [ "$(echo $1 | cut -c1-1)" = '-' ];                         then OPTS="$OPTS $1"
-  elif [ "$1" = '::' ];                                            then exclude_active='true'
+  if [ "$1" = '--help' ] || [ "$1" = '-h' ] || [ "$1" = '--h' ]; then Help='true'
+  elif [ "$1" = '--list' ] || [ "$1" = '--l' ];                  then List='true'
+  elif [ "$1" = '--describe' ] || [ "$1" = '--desc' ];           then Describe='true'
+  elif [ "$1" = '--raw' ];                                       then Raw='true'
+  elif [ "$(echo $1 | cut -c1-1)" = '-' ];                       then OPTS="$OPTS $1"
+  elif [ "$1" = '::' ];                                          then exclude_active='true'
   elif [ "$OLD" = '' ] && [ "$NEW" = '' ]; then 
     if [ "$sq" ];
     then OLD="$(printf "\"%q\"" $1)";
@@ -41,10 +41,10 @@ done
 [ -z "$Raw" ] && ED="$ED --exclude-dir='.git'"
 [ "$ID$IF" = '' ] && ID='.'
 
+# [ "$Help" ] && echo "--help is active"
 # [ "$List" ] && echo "--list is active"
 # [ "$Describe" ] && echo "--describe is active"
 # [ "$Raw" ] && echo "--raw is active"
-# [ "$Help" ] && echo "--help is active"
 # echo "PATTERN is $PATTERN"
 # echo "ED is $ED"
 # echo "EF is $EF"
@@ -79,12 +79,12 @@ else
   echo "      rgrepf old new :: file1.txt '**/*.log'"
   echo
   echo "   Options(only for rgrepf):"
+  echo "      --help       Show this help"
   echo "      --list       Instead of showing each match, show an overview of which files"
   echo "                   were matched"
   echo "      --describe   Show the full command that grepf transforms into"
   echo "      --raw        Raw unfiltered searches i.e. .git/ is filtered by default, this"
   echo "                   turns it off"
-  echo "      --help       Show this help"
   echo
   echo "   Note:"
   echo "      Any [--OPTIONS] you can pass to grep, you can pass to grepf as well."
