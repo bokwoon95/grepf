@@ -1,0 +1,3 @@
+✗ Right now GNU grep doesn't accept filepaths in its excludes. If grepf detects a user doing that, switch to 'find . -exec grep' instead rather than telling the user it can't be done
+
+✗ Add support for rg and ag
