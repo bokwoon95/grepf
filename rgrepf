@@ -32,14 +32,18 @@ while [ "$i" -lt "$argc" ]; do
     isdir=''; [ "$(echo -n "$1" | tail -c1)" = '/' ] && isdir='true'
     if [ "$isdir" ]; then arg="$(echo "$1" | sed 's/.$//')"; else arg="$1"; fi
     if [ "$exclude_active" ]; then
-      if [ "$isdir" ]; then
-        ED="$(echo $ED --exclude-dir=\'$arg\')" # don't printf
-      else
-        if [ "$(echo "$arg" | grep '/' )" ] && [ "$grepprg" = 'gnu' ]; then
-          printf "\n   WARNING: GNU grep --exclude doesn't support $arg, use $(echo "$arg" | sed -ne 's!.*/\(.*\..*\)!\1!p') instead\n\n"
-          warning='true'
+      basearg="$(echo "$arg" | sed -ne 's!.*/\(.*\)$!\1!p')"
+      if [ "$basearg" ] && [ "$grepprg" = 'gnu' ]; then
+        if [ "$isdir" ];
+        then printf "\n   WARNING: GNU grep --exclude doesn't support '$arg/', use '$basearg/' instead\n\n"
+        else printf "\n   WARNING: GNU grep --exclude doesn't support '$arg', use '$basearg' instead\n\n"
         fi
-        EF="$(echo $EF --exclude=\'$arg\')" # don't printf
+        warning='true'
+      fi
+      if [ "$isdir" ]; then
+        ED="$(echo $ED --exclude-dir=\'$arg\')" # don't use printf, don't want to escape wildcards in $arg
+      else
+        EF="$(echo $EF --exclude=\'$arg\')" # don't use printf, don't want to escape wildcards in $arg
       fi
     else
       if [ "$isdir" ]; then
