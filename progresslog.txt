@@ -1,2 +1,0 @@
-✗ right now awk with $ARGS is not replacing shift with $@ because shift and $@ respect quoted strings with spaces
-    To replicate, just try searching for anything with spaces in it with the --list option. Notice that strings with spaces are being treated as multiple arguments in the final command.

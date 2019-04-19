@@ -2,34 +2,35 @@
 
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
-  if [ "$1" = "--list" -o "$1" = "--l" ];                  then List="true"
-  elif [ "$1" = "--describe" -o "$1" = "--desc" ];         then Describe="true"
-  elif [ "$1" = "--raw" ];                                 then Raw="true"
-  elif [ "$1" = "--help" -o "$1" = "-h" -o "$1" = "--h" ]; then Help="true"
-  elif [ "$(echo $1 | cut -c1-1)" = "-" ];                 then OPTS="$(echo $OPTS $1 | xargs)"
-  elif [ "$1" = "::" ];                                    then exclude_active="true"
-  elif [ -z "$PATTERN" -a "$1" != "::" ];                  then PATTERN="\"$1\""
+  if [ "$(echo $1 | grep "'")" ]; then echo 'Sorry, searching for single quotes is not supported yet'; exit 1; fi
+  if [ "$1" = '--list' -o "$1" = '--l' ];                  then List='true'
+  elif [ "$1" = '--describe' -o "$1" = '--desc' ];         then Describe='true'
+  elif [ "$1" = '--raw' ];                                 then Raw='true'
+  elif [ "$1" = '--help' -o "$1" = '-h' -o "$1" = '--h' ]; then Help='true'
+  elif [ "$(echo $1 | cut -c1-1)" = '-' ];                 then OPTS="$OPTS $1"
+  elif [ "$1" = '::' ];                                    then exclude_active='true'
+  elif [ "$PATTERN" = '' ];                                then PATTERN="$(printf "'%q'" $1)"
   else
-    isdir=""; [ "$(echo -n $1 | tail -c1)" = "/" ] && isdir="true"
+    isdir=''; [ "$(echo -n $1 | tail -c1)" = '/' ] && isdir='true'
     if [ "$isdir" ]; then arg="$(echo $1 | sed 's/.$//')"; else arg="$1"; fi
     if [ "$exclude_active" ]; then
       if [ "$isdir" ]; then
-        ED="$(echo $ED --exclude-dir=\"$arg\")"
+        ED="$(echo $ED --exclude-dir=\'$arg\')"
       else
-        EF="$(echo $EF --exclude=\"$arg\")"
+        EF="$(echo $EF --exclude=\'$arg\')"
       fi
     else
       if [ "$isdir" ]; then
-        ID="$(echo $ID \"$arg\")"
+        ID="$(echo $ID \'$arg\')"
       else
-        IF="$(echo $IF \"$arg\")"
+        IF="$(echo $IF \'$arg\')"
       fi
     fi
   fi
   shift;: "$((i=i+1))"
 done
-[ -z "$Raw" ] && ED="$ED --exclude-dir=\".git\""
-[ "$ID$IF" = "" ] && ID="."
+[ -z "$Raw" ] && ED="$ED --exclude-dir='.git'"
+[ "$ID$IF" = '' ] && ID='.'
 
 # [ "$List" ] && echo "--list is active"
 # [ "$Describe" ] && echo "--describe is active"
@@ -43,7 +44,7 @@ done
 # echo "OPTS are $OPTS"
 # exit 0
 
-if [ "$PATTERN" != "" -a ! "$Help" ]; then
+if [ "$PATTERN" != '' -a ! "$Help" ]; then
   if [ "$List" ]; then
     cmd="grep $OPTS -rEIl --context=3 --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4"
   else
@@ -73,6 +74,5 @@ else
   echo
   echo "   Note:"
   echo "      Any [--OPTIONS] you can pass to grep, you can pass to grepf as well."
-  echo "      If '!' appears in <old> or <new>, it must be escaped i.e. '\\!' and"
-  echo "      surrounded with single quotes."
+  echo "      If in doubt, wrap it in single quotes 'like this'"
 fi

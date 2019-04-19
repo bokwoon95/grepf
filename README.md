@@ -21,6 +21,5 @@
 
    Note:
       Any [--OPTIONS] you can pass to grep, you can pass to grepf as well.
-      If '!' appears in <old> or <new>, it must be escaped i.e. '\!' and
-      surrounded with single quotes.
+      If in doubt, wrap it in single quotes 'like this'
 ```
