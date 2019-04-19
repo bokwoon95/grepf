@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 
+if grep --version | grep -i bsd >/dev/null 2>&1; then
+  grepprg='bsd'; grepver="$(grep --version | grep -m1 grep)"
+elif grep --version | grep -i gnu >/dev/null 2>&1; then
+  grepprg='gnu'; grepver="$(grep --version | grep -m1 grep)"
+else
+  echo 'Your version of grep is unknown (???)'
+  exit 1
+fi
+
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
-  [ "$(echo $1 | grep "'")" ] && sq='true'
+  [ "$(echo "$1" | grep "'")" ] && sq='true'
   if [ "$1" = '--help' ] || [ "$1" = '-h' ] || [ "$1" = '--h' ]; then Help='true'
   elif [ "$1" = '--list' ] || [ "$1" = '--l' ];                  then List='true'
   elif [ "$1" = '--describe' ] || [ "$1" = '--desc' ];           then Describe='true'
   elif [ "$1" = '--raw' ];                                       then Raw='true'
-  elif [ "$(echo $1 | cut -c1-1)" = '-' ];                       then OPTS="$OPTS $1"
+  elif [ "$(echo "$1" | cut -c1-1)" = '-' ];                     then OPTS="$OPTS $1"
   elif [ "$1" = '::' ];                                          then exclude_active='true'
   elif [ "$OLD" = '' ] && [ "$NEW" = '' ]; then 
     if [ "$sq" ];
@@ -20,13 +29,17 @@ while [ "$i" -lt "$argc" ]; do
     else NEW="$(printf "'%q'" "$1")";
     fi
   else
-    isdir=''; [ "$(echo -n $1 | tail -c1)" = '/' ] && isdir='true'
-    if [ "$isdir" ]; then arg="$(echo $1 | sed 's/.$//')"; else arg="$1"; fi
+    isdir=''; [ "$(echo -n "$1" | tail -c1)" = '/' ] && isdir='true'
+    if [ "$isdir" ]; then arg="$(echo "$1" | sed 's/.$//')"; else arg="$1"; fi
     if [ "$exclude_active" ]; then
       if [ "$isdir" ]; then
-        ED="$ED --exclude-dir=\'$arg\'"
+        ED="$(echo $ED --exclude-dir=\'$arg\')" # don't printf
       else
-        EF="$EF --exclude=\'$arg\'"
+        if [ "$(echo "$arg" | grep '/' )" ] && [ "$grepprg" = 'gnu' ]; then
+          printf "\n   WARNING: GNU grep --exclude doesn't support $arg, use $(echo "$arg" | sed -ne 's!.*/\(.*\..*\)!\1!p') instead\n\n"
+          warning='true'
+        fi
+        EF="$(echo $EF --exclude=\'$arg\')" # don't printf
       fi
     else
       if [ "$isdir" ]; then
@@ -54,12 +67,13 @@ done
 # echo "OPTS are $OPTS"
 # exit 0
 
-if [ "$OLD" != "" ] && [ "$NEW" != "" ] && [ -z "$Help" ]; then
+if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
     cmd="grep $OPTS -rEIl --context=3 --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
   else
     cmd="grep $OPTS -rEIl --context=3 -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$(echo $OLD|xargs)!$(echo $NEW|xargs)!g'"
   fi;
+  [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then
     echo "$cmd";
   else
@@ -89,4 +103,6 @@ else
   echo "   Note:"
   echo "      Any [--OPTIONS] you can pass to grep, you can pass to grepf as well."
   echo "      If in doubt, wrap it in single quotes 'like this'"
+  echo
+  echo "   You are using: $grepver"
 fi
