@@ -22,3 +22,28 @@
       Any [--OPTIONS] you can pass to grep, you can pass to grepf as well.
       If in doubt, wrap it in single quotes 'like this'
 ```
+
+```
+      Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]
+
+   Search and replace <old> with <new> in [INCLUDED] files, ignoring [EXCLUDED] files.
+   [INCLUDED] files are separated from [EXCLUDED] files by a '::'.
+   By default, [INCLUDED] is the current directory.
+
+   Examples:
+      rgrepf old new
+      rgrepf old new '*.py'
+      rgrepf old new file1.txt folder1/ :: folder1/file2.txt
+      rgrepf old new :: file1.txt '**/*.log'
+
+   Options(only for rgrepf):
+      --help       Show this help
+      --list       List the files that are affected
+      --describe   Show the full command that grepf transforms into
+      --raw        Raw unfiltered searches i.e. .git/ is filtered by default, this
+                   turns it off
+
+   Note:
+      Any [--OPTIONS] you can pass to grep, you can pass to grepf as well.
+      If in doubt, wrap it in single quotes 'like this'
+```
