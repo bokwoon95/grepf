@@ -1,3 +1,5 @@
+[![asciicast](https://asciinema.org/a/w5Dw52mj2dupFGMnOGfWRxIr1.svg)](https://asciinema.org/a/w5Dw52mj2dupFGMnOGfWRxIr1)
+
 ## Search only
 ```
    Usage: grepf <pattern> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]
