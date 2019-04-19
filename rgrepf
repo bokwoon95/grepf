@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+## Get grepprg (bsdgrep/gnugrep/ag/rg) ##
 if grep --version | grep -i bsd >/dev/null 2>&1; then
   grepprg='bsd'; grepver="$(grep --version | grep -m1 grep)"
 elif grep --version | grep -i gnu >/dev/null 2>&1; then
@@ -9,6 +10,7 @@ else
   exit 1
 fi
 
+## Unpack script arguments ##
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
   [ "$(echo "$1" | grep "'")" ] && sq='true'
@@ -18,39 +20,34 @@ while [ "$i" -lt "$argc" ]; do
   elif [ "$1" = '--raw' ];                                       then Raw='true'
   elif [ "$(echo "$1" | cut -c1-1)" = '-' ];                     then OPTS="$OPTS $1"
   elif [ "$1" = '::' ];                                          then exclude_active='true'
-  elif [ "$OLD" = '' ] && [ "$NEW" = '' ]; then 
+  elif [ "$OLD" = '' ] && [ "$NEW" = '' ]; then
     if [ "$sq" ];
     then OLD="\"$1\"";
-    else OLD="'$1'";
-    fi
-  elif [ "$OLD" ] && [ "$NEW" = '' ]; then 
+    else OLD="'$1'"; fi
+  elif [ "$OLD" ] && [ "$NEW" = '' ]; then
     if [ "$sq" ];
     then NEW="\"$1\"";
-    else NEW="'$1'";
-    fi
+    else NEW="'$1'"; fi
   else
     isdir=''; [ "$(echo -n "$1" | tail -c1)" = '/' ] && isdir='true'
-    if [ "$isdir" ]; then arg="$(echo "$1" | sed 's/.$//')"; else arg="$1"; fi
+    if [ "$isdir" ];
+    then arg="$(echo "$1" | sed 's/.$//')"; # remove trailing slash for directories
+    else arg="$1"; fi
     if [ "$exclude_active" ]; then
-      basearg="$(echo "$arg" | sed -ne 's!.*/\(.*\)$!\1!p')"
+      basearg="$(echo "$arg" | sed -ne 's!.*/\(.*\)$!\1!p')" # check if $arg is a filepath (slashes present) or filename (no slashes)
       if [ "$basearg" ] && [ "$grepprg" = 'gnu' ]; then
         if [ "$isdir" ];
-        then echo "   WARNING: GNU grep --exclude-dir doesn't support '$arg/', use '$basearg/' instead"
-        else echo "   WARNING: GNU grep --exclude doesn't support '$arg', use '$basearg' instead"
-        fi
+        then echo "   WARNING: GNU grep --exclude-dir doesn't support '$arg/', use '$basearg/' instead";
+        else echo "   WARNING: GNU grep --exclude doesn't support '$arg', use '$basearg' instead"; fi
         warning='true'
       fi
-      if [ "$isdir" ]; then
-        ED="$ED --exclude-dir='$arg'"
-      else
-        EF="$EF --exclude='$arg'"
-      fi
+      if [ "$isdir" ];
+      then ED="$ED --exclude-dir='$arg'"; # ED (Excluded Directories)
+      else EF="$EF --exclude='$arg'"; fi # EF (Excluded Files)
     else
-      if [ "$isdir" ]; then
-        ID="$ID '$arg'"
-      else
-        IF="$IF '$arg'"
-      fi
+      if [ "$isdir" ];
+      then ID="$ID '$arg'"; # ID (Included Directories)
+      else IF="$IF '$arg'"; fi # IF (Included Files)
     fi
   fi
   shift;: "$((i=i+1))"
@@ -58,6 +55,7 @@ done
 [ -z "$Raw" ] && ED="$ED --exclude-dir='.git'"
 [ "$ID$IF" = '' ] && ID='.'
 
+## Debugging ##
 # [ "$Help" ] && echo "--help is active"
 # [ "$List" ] && echo "--list is active"
 # [ "$Describe" ] && echo "--describe is active"
@@ -71,19 +69,20 @@ done
 # echo "OPTS are $OPTS"
 # exit 0
 
+## Execute Command ##
 if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
     cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
   else
-    OLDE="$(echo "$OLD" | xargs | sed -e 's#\!#\\!#g')"
-    NEWE="$(echo "$NEW" | xargs | sed -e 's#\!#\\!#g')"
+    OLDE="$(echo "$OLD" | xargs | sed -e 's#\!#\\!#g')" # escape ! -> \!
+    NEWE="$(echo "$NEW" | xargs | sed -e 's#\!#\\!#g')" # escape ! -> \!
     cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDE!$NEWE!g'"
   fi;
   [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then
-    echo "$cmd";
+    echo "$cmd"
   else
-    eval "$cmd";
+    eval "$cmd"
     eval "grep $OPTS -rEIHnC3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
   fi
 else
