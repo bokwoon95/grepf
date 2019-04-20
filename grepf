@@ -30,7 +30,7 @@ while [ "$i" -lt "$argc" ]; do
     then arg="$(echo "$1" | sed 's/.$//')"; # remove trailing slash for directories
     else arg="$1"; fi
     if [ "$exclude_active" ]; then
-      basearg="$(echo "$arg" | sed -ne 's!.*/\(.*\)$!\1!p')" # check if $arg is a filepath (slashes present) or filename (no slashes)
+      basearg="$(echo "$arg" | sed -n 's!.*/\(.*\)$!\1!p')" # check if $arg is a filepath (slashes present) or filename (no slashes)
       if [ "$basearg" ] && [ "$grepprg" = 'gnu' ]; then
         if [ "$isdir" ];
         then echo "   WARNING: GNU grep --exclude-dir doesn't support '$arg/', use '$basearg/' instead";

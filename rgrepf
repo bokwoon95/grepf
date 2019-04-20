@@ -34,7 +34,7 @@ while [ "$i" -lt "$argc" ]; do
     then arg="$(echo "$1" | sed 's/.$//')"; # remove trailing slash for directories
     else arg="$1"; fi
     if [ "$exclude_active" ]; then
-      basearg="$(echo "$arg" | sed -ne 's!.*/\(.*\)$!\1!p')" # check if $arg is a filepath (slashes present) or filename (no slashes)
+      basearg="$(echo "$arg" | sed -n 's!.*/\(.*\)$!\1!p')" # check if $arg is a filepath (slashes present) or filename (no slashes)
       if [ "$basearg" ] && [ "$grepprg" = 'gnu' ]; then
         if [ "$isdir" ];
         then echo "   WARNING: GNU grep --exclude-dir doesn't support '$arg/', use '$basearg/' instead";
@@ -69,17 +69,19 @@ done
 # echo "OPTS are $OPTS"
 # exit 0
 
+# Sanitize $OLDRE and $NEWRE
+OLDRE="$(echo "$OLD" | xargs | sed 's#\!#\\!#g')"
+NEWRE="$(echo "$NEW" | xargs | sed 's#\!#\\!#g')"
+
 ## Execute Command ##
 if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
     cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
   else
-    OLDE="$(echo "$OLD" | xargs | sed -e 's#\!#\\!#g')" # escape ! -> \!
-    NEWE="$(echo "$NEW" | xargs | sed -e 's#\!#\\!#g')" # escape ! -> \!
-    sq=''; [ "$(echo "$OLDE$NEWE" | grep "'")" ] && sq='true'
+    sq=''; [ "$(echo "$OLDRE$NEWRE" | grep "'")" ] && sq='true'
     if [ "$sq" ];
-    then cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$OLDE@$NEWE@g\"";
-    else cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDE!$NEWE!g'"; fi
+    then cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
+    else cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
   fi;
   [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then
