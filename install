@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 install () {
-  (curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/bokwoon95/grepf/master/grepf -Lo /usr/local/bin/grepf &&\
+  (curl -L -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/bokwoon95/grepf/master/grepf > /usr/local/bin/grepf &&\
     chmod a+x /usr/local/bin/grepf) || fail='true'
-  (curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/bokwoon95/grepf/master/rgrepf -Lo /usr/local/bin/rgrepf &&\
+  (curl -L -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/bokwoon95/grepf/master/rgrepf > /usr/local/bin/rgrepf &&\
     chmod a+x /usr/local/bin/rgrepf) || fail='true'
   if [ "$fail" ]; then
     echo "grepf install failed, please try again with sudo"

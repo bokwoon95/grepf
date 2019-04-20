@@ -2,9 +2,9 @@
 
 ## Get grepprg (bsdgrep/gnugrep/ag/rg) ##
 if grep --version | grep -i bsd >/dev/null 2>&1; then
-  grepprg='bsd'; grepver="$(grep --version | grep -m1 grep)"
+  grepprg='BSD grep'
 elif grep --version | grep -i gnu >/dev/null 2>&1; then
-  grepprg='gnu'; grepver="$(grep --version | grep -m1 grep)"
+  grepprg='GNU grep'
 else
   echo 'Your version of grep is unknown (???)'
   exit 1
@@ -31,7 +31,7 @@ while [ "$i" -lt "$argc" ]; do
     else arg="$1"; fi
     if [ "$exclude_active" ]; then
       basearg="$(echo "$arg" | sed -n 's!.*/\(.*\)$!\1!p')" # check if $arg is a filepath (slashes present) or filename (no slashes)
-      if [ "$basearg" ] && [ "$grepprg" = 'gnu' ]; then
+      if [ "$basearg" ] && [ "$grepprg" = 'GNU grep' ]; then
         if [ "$isdir" ];
         then echo "   WARNING: GNU grep --exclude-dir doesn't support '$arg/', use '$basearg/' instead";
         else echo "   WARNING: GNU grep --exclude doesn't support '$arg', use '$basearg' instead"; fi
@@ -98,8 +98,6 @@ else
   echo "                   turns it off"
   echo
   echo "   Note:"
-  echo "      Any [--OPTIONS] you can pass to grep, you can pass to grepf as well."
+  echo "      Any [--OPTIONS] you can pass to $grepprg, you can pass to grepf as well."
   echo "      If in doubt, wrap it in single quotes 'like this'"
-  echo
-  echo "   You are using: $grepver"
 fi
