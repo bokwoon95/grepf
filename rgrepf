@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## Get grepprg (bsdgrep/gnugrep/ag/rg) ##
-if command -v rg >/dev/null 2>&1; then
+if command -v rrg >/dev/null 2>&1; then
   grepprg='rg'
 elif command -v ag >/dev/null 2>&1; then
   grepprg='ag'
@@ -46,10 +46,10 @@ while [ "$i" -lt "$argc" ]; do
         warning='true'
       fi
       if [ "$grepprg" = "rg" ]; then
-        ED=""; EF=""
+        ED=""; EF="";
       elif [ "$grepprg" = "ag" ]; then
         if [ "$isdir" ];
-        then ED="$ED $arg";
+        then ED="$ED $arg/";
         else EF="$EF $arg"; fi
       else
         if [ "$isdir" ];
@@ -72,6 +72,7 @@ done
 # [ "$List" ] && echo "--list is active"
 # [ "$Describe" ] && echo "--describe is active"
 # [ "$Raw" ] && echo "--raw is active"
+# echo "grepprg is $grepprg"
 # echo "OLD is $OLD"
 # echo "NEW is $NEW"
 # echo "ED is $ED"
@@ -88,25 +89,27 @@ NEWRE="$(echo "$NEW" | xargs | sed 's#\!#\\!#g')"
 ## Execute Command ##
 if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
-    # cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
     if [ "$grepprg" = 'rg' ]; then
       cmd="echo 'not implemented yet'";
     elif [ "$grepprg" = 'ag' ]; then
-      cmd="ag $OPTS -l --pager='less -RIMSFX#4' $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
+      # cmd="ag $OPTS -l --pager='less -RIMSFX#4' $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
+      if [ "$ED$EF" = '' ];
+      then cmd="ag $OPTS -l --nocolor --pager='less -RIMSFX#4' $OLD $ID $IF";
+      else cmd="ag $OPTS -l --nocolor --pager='less -RIMSFX#4' $OLD $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
     else
       cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4";
     fi
   else
     sq=''; [ "$(echo "$OLDRE$NEWRE" | grep "'")" ] && sq='true'
-    # if [ "$sq" ];
-    # then cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
-    # else cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
     if [ "$grepprg" = 'rg' ]; then
       cmd="echo 'not implemented yet'";
     elif [ "$grepprg" = 'ag' ]; then
+      if [ "$ED$EF" = '' ];
+      then cmd="ag $OPTS -l --nocolor --pager='less -RIMSFX#4' $OLD $ID $IF";
+      else cmd="ag $OPTS -l --nocolor --pager='less -RIMSFX#4' $OLD $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
       if [ "$sq" ];
-      then cmd="ag $OPTS -l --nocolor $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n') --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
-      else cmd="ag $OPTS -l --nocolor $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n') --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
+      then cmd="$cmd --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
+      else cmd="$cmd --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
     else
       if [ "$sq" ];
       then cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";

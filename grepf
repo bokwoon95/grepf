@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## Get grepprg (bsdgrep/gnugrep/ag/rg) ##
-if command -v rg >/dev/null 2>&1; then
+if command -v rrg >/dev/null 2>&1; then
   grepprg='rg'
 elif command -v ag >/dev/null 2>&1; then
   grepprg='ag'
@@ -17,7 +17,7 @@ fi
 ## Unpack script arguments ##
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
-  [ "$(echo "$1" | grep "'")" ] && sq='true'
+  sq=''; [ "$(echo "$1" | grep "'")" ] && sq='true'
   if [ "$1" = '--help' ] || [ "$1" = '-h' ] || [ "$1" = '--h' ]; then Help='true'
   elif [ "$1" = '--list' ] || [ "$1" = '--l' ];                  then List='true'
   elif [ "$1" = '--describe' ] || [ "$1" = '--desc' ];           then Describe='true'
@@ -42,10 +42,10 @@ while [ "$i" -lt "$argc" ]; do
         warning='true'
       fi
       if [ "$grepprg" = "rg" ]; then
-        ED=""; EF=""
+        ED=""; EF="";
       elif [ "$grepprg" = "ag" ]; then
         if [ "$isdir" ];
-        then ED="$ED $arg";
+        then ED="$ED $arg/";
         else EF="$EF $arg"; fi
       else
         if [ "$isdir" ];
@@ -68,6 +68,7 @@ done
 # [ "$List" ] && echo "--list is active"
 # [ "$Describe" ] && echo "--describe is active"
 # [ "$Raw" ] && echo "--raw is active"
+# echo "grepprg is $grepprg"
 # echo "PATTERN is $PATTERN"
 # echo "ED is $ED"
 # echo "EF is $EF"
@@ -79,18 +80,26 @@ done
 ## Execute Command ##
 if [ "$PATTERN" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
-    if [ "$grepprg" = 'rg' ]; then cmd="echo 'not implemented yet'";
-    elif [ "$grepprg" = 'ag' ]; then cmd="ag $OPTS -l --pager='less -RIMSFX#4' $PATTERN $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
-    else cmd="grep $OPTS -rEIl --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4"; fi
+    if [ "$grepprg" = 'rg' ]; then
+      cmd="echo 'not implemented yet'";
+    elif [ "$grepprg" = 'ag' ]; then
+      if [ "$ED$EF" = '' ];
+      then cmd="ag $OPTS -l --pager='less -RIMSFX#4' $PATTERN $ID $IF";
+      else cmd="ag $OPTS -l --pager='less -RIMSFX#4' $PATTERN $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
+    else
+      cmd="grep $OPTS -rEIl --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4";
+    fi
   else
     if [ "$grepprg" = 'rg' ]; then
       cmd="echo 'not implemented yet'";
     elif [ "$grepprg" = 'ag' ]; then
-      cmd="ag $OPTS -C3 --pager='less -RIMSFX#4' $PATTERN $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
+      if [ "$ED$EF" = '' ];
+      then cmd="ag $OPTS -C3 --pager='less -RIMSFX#4' $PATTERN $ID $IF";
+      else cmd="ag $OPTS -C3 --pager='less -RIMSFX#4' $PATTERN $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
     else
       cmd="grep $OPTS -rEIHnC3 --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4";
     fi
-  fi;
+  fi
   [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then
     echo "$cmd"
