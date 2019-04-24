@@ -33,12 +33,12 @@ fi
 argc="$#";: "$((i=0))"
 while [ "$i" -lt "$argc" ]; do
   sq=''; [ "$(echo "$1" | grep "'")" ] && sq='true'
-  if [ "$1" = '--help' ] || [ "$1" = '-h' ] || [ "$1" = '--h' ]; then Help='true'
-  elif [ "$1" = '--list' ] || [ "$1" = '--l' ];                  then List='true'
-  elif [ "$1" = '--describe' ] || [ "$1" = '--desc' ];           then Describe='true'
-  elif [ "$1" = '--raw' ];                                       then Raw='true'
-  elif [ "$(echo "$1" | cut -c1-1)" = '-' ];                     then OPTS="$OPTS $1"
-  elif [ "$1" = '::' ];                                          then exclude_active='true'
+  if [ "$1" = '--help' ] || [ "$1" = '-h' ] || [ "$1" = '--h' ];           then Help='true'
+  elif [ "$1" = '--list' ] || [ "$1" = '--l' ];                            then List='true'
+  elif [ "$1" = '--describe' ] || [ "$1" = '--desc' ] || [ "$1" = '--d' ]; then Describe='true'
+  elif [ "$1" = '--raw' ] || [ "$1" = '--r' ];                             then Raw='true'
+  elif [ "$(echo "$1" | cut -c1-1)" = '-' ];                               then OPTS="$OPTS $1"
+  elif [ "$1" = '::' ];                                                    then exclude_active='true'
   elif [ "$PATTERN" = '' ]; then
     if [ "$sq" ];
     then PATTERN="\"$1\"";
@@ -76,6 +76,7 @@ while [ "$i" -lt "$argc" ]; do
   shift;: "$((i=i+1))"
 done
 [ -z "$Raw" ] && [ "$grepprg" != 'rg' ] && [ "$grepprg" != 'ag' ] && ED="$ED --exclude-dir='.git'"
+[ "$Raw" ] && [ "$grepprg" = 'ag' ] && OPTS="$OPTS -aU --hidden"
 [ "$ID$IF" = '' ] && ID='.'
 
 ## Debugging ##
