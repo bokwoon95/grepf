@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
 ## Get grepprg (bsdgrep/gnugrep/ag/rg) ##
-if grep --version | grep -i bsd >/dev/null 2>&1; then
+if command -v rg >/dev/null 2>&1; then
+  grepprg='rg'
+elif command -v ag >/dev/null 2>&1; then
+  grepprg='ag'
+elif grep --version | grep -i bsd >/dev/null 2>&1; then
   grepprg='BSD grep'
 elif grep --version | grep -i gnu >/dev/null 2>&1; then
   grepprg='GNU grep'
