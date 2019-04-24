@@ -45,9 +45,17 @@ while [ "$i" -lt "$argc" ]; do
         else echo "   WARNING: GNU grep --exclude doesn't support '$arg', use '$basearg' instead"; fi
         warning='true'
       fi
-      if [ "$isdir" ];
-      then ED="$ED --exclude-dir='$arg'"; # ED (Excluded Directories)
-      else EF="$EF --exclude='$arg'"; fi # EF (Excluded Files)
+      if [ "$grepprg" = "rg" ]; then
+        ED=""; EF=""
+      elif [ "$grepprg" = "ag" ]; then
+        if [ "$isdir" ];
+        then ED="$ED $arg";
+        else EF="$EF $arg"; fi
+      else
+        if [ "$isdir" ];
+        then ED="$ED --exclude-dir='$arg'"; # ED (Excluded Directories)
+        else EF="$EF --exclude='$arg'"; fi # EF (Excluded Files)
+      fi
     else
       if [ "$isdir" ];
       then ID="$ID '$arg'"; # ID (Included Directories)
@@ -56,7 +64,7 @@ while [ "$i" -lt "$argc" ]; do
   fi
   shift;: "$((i=i+1))"
 done
-[ -z "$Raw" ] && ED="$ED --exclude-dir='.git'"
+[ -z "$Raw" ] && [ "$grepprg" != 'rg' ] && [ "$grepprg" != 'ag' ] && ED="$ED --exclude-dir='.git'"
 [ "$ID$IF" = '' ] && ID='.'
 
 ## Debugging ##
@@ -80,19 +88,43 @@ NEWRE="$(echo "$NEW" | xargs | sed 's#\!#\\!#g')"
 ## Execute Command ##
 if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
   if [ "$List" ]; then
-    cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
+    # cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4"
+    if [ "$grepprg" = 'rg' ]; then
+      cmd="echo 'not implemented yet'";
+    elif [ "$grepprg" = 'ag' ]; then
+      cmd="ag $OPTS -l --pager='less -RIMSFX#4' $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
+    else
+      cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4";
+    fi
   else
     sq=''; [ "$(echo "$OLDRE$NEWRE" | grep "'")" ] && sq='true'
-    if [ "$sq" ];
-    then cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
-    else cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
+    # if [ "$sq" ];
+    # then cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
+    # else cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
+    if [ "$grepprg" = 'rg' ]; then
+      cmd="echo 'not implemented yet'";
+    elif [ "$grepprg" = 'ag' ]; then
+      if [ "$sq" ];
+      then cmd="ag $OPTS -l --nocolor $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n') --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
+      else cmd="ag $OPTS -l --nocolor $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n') --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
+    else
+      if [ "$sq" ];
+      then cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
+      else cmd="grep $OPTS -rEIl -e $OLD $ID $IF $ED $EF --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
+    fi
   fi;
   [ "$warning" ] && [ -z "$Describe" ] && read -p "Press Enter to continue"
   if [ "$Describe" ]; then
     echo "$cmd"
   else
     eval "$cmd"
-    eval "grep $OPTS -rEIHnC3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
+    if [ "$grepprg" = 'rg' ]; then
+      eval "echo 'not implemented yet'";
+    elif [ "$grepprg" = 'ag' ]; then
+      eval "ag $OPTS -C3 --pager='less -RIMSFX#4' $NEW $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
+    else
+      eval "grep $OPTS -rEIHnC3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
+    fi
   fi
 else
   echo "   Usage: rgrepf <old> <new> [INCLUDED...] [:: EXCLUDED...] [--OPTIONS...]"
