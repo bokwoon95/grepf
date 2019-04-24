@@ -3,4 +3,8 @@
     https://stackoverflow.com/a/13844351
 
 ✓ Add support for ag
+
 ✗ Add support for rg
+
+✓ Allow user to specify which grepprg to use by exporting the $GREPF environment variable: either rg, ag or grep.
+    grep will always default to system grep, meaning BSD for macOS and GNU for Linux, even if the user has installed the other grep variant.

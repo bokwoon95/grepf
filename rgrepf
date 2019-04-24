@@ -1,17 +1,32 @@
 #!/usr/bin/env bash
 
-## Get grepprg (bsdgrep/gnugrep/ag/rg) ##
-if command -v rrg >/dev/null 2>&1; then
-  grepprg='rg'
-elif command -v ag >/dev/null 2>&1; then
-  grepprg='ag'
-elif grep --version | grep -i bsd >/dev/null 2>&1; then
-  grepprg='BSD grep'
-elif grep --version | grep -i gnu >/dev/null 2>&1; then
-  grepprg='GNU grep'
+## Get grepprg (BSD grep/GNU grep/ag/rg) ##
+if [ "${GREPF+x}" ]; then
+  if [ "$GREPF" = 'rg' ] && command -v rrg >/dev/null 2>&1; then grepprg='rg';
+  elif [ "$GREPF" = 'ag' ] && command -v ag >/dev/null 2>&1; then grepprg='ag';
+  elif [ "$GREPF" = 'grep' ]; then
+    if grep --version | grep -i bsd >/dev/null 2>&1; then
+      grepprg='BSD grep'
+    elif grep --version | grep -i gnu >/dev/null 2>&1; then
+      grepprg='GNU grep'
+    else
+      echo 'Your version of grep is unknown (???)'
+      exit 1
+    fi
+  fi
 else
-  echo 'Your version of grep is unknown (???)'
-  exit 1
+  if command -v rrg >/dev/null 2>&1; then
+    grepprg='rg'
+  elif command -v ag >/dev/null 2>&1; then
+    grepprg='ag'
+  elif grep --version | grep -i bsd >/dev/null 2>&1; then
+    grepprg='BSD grep'
+  elif grep --version | grep -i gnu >/dev/null 2>&1; then
+    grepprg='GNU grep'
+  else
+    echo 'Your version of grep is unknown (???)'
+    exit 1
+  fi
 fi
 
 ## Unpack script arguments ##
