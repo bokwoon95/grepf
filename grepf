@@ -100,8 +100,8 @@ if [ "$PATTERN" ] && [ -z "$Help" ]; then
       cmd="echo 'not implemented yet'";
     elif [ "$grepprg" = 'ag' ]; then
       if [ "$ED$EF" = '' ];
-      then cmd="ag $OPTS -l --pager='less -RIMSFX#4' $PATTERN $ID $IF";
-      else cmd="ag $OPTS -l --pager='less -RIMSFX#4' $PATTERN $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
+      then cmd="ag $OPTS -l --pager='less -RiMSFX#4' $PATTERN $ID $IF";
+      else cmd="ag $OPTS -l --pager='less -RiMSFX#4' $PATTERN $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
     else
       cmd="grep $OPTS -rEIl --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4";
     fi
@@ -110,8 +110,8 @@ if [ "$PATTERN" ] && [ -z "$Help" ]; then
       cmd="echo 'not implemented yet'";
     elif [ "$grepprg" = 'ag' ]; then
       if [ "$ED$EF" = '' ];
-      then cmd="ag $OPTS -C3 --pager='less -RIMSFX#4' $PATTERN $ID $IF";
-      else cmd="ag $OPTS -C3 --pager='less -RIMSFX#4' $PATTERN $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
+      then cmd="ag $OPTS -C3 --pager='less -RiMSFX#4' $PATTERN $ID $IF";
+      else cmd="ag $OPTS -C3 --pager='less -RiMSFX#4' $PATTERN $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
     else
       cmd="grep $OPTS -rEIHnC3 --color=always -e $PATTERN $ID $IF $ED $EF | less -RiMSFX#4";
     fi

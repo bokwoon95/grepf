@@ -108,10 +108,10 @@ if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
     if [ "$grepprg" = 'rg' ]; then
       cmd="echo 'not implemented yet'";
     elif [ "$grepprg" = 'ag' ]; then
-      # cmd="ag $OPTS -l --pager='less -RIMSFX#4' $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
+      # cmd="ag $OPTS -l --pager='less -RiMSFX#4' $OLD $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
       if [ "$ED$EF" = '' ];
-      then cmd="ag $OPTS -l --nocolor --pager='less -RIMSFX#4' $OLD $ID $IF";
-      else cmd="ag $OPTS -l --nocolor --pager='less -RIMSFX#4' $OLD $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
+      then cmd="ag $OPTS -l --nocolor --pager='less -RiMSFX#4' $OLD $ID $IF";
+      else cmd="ag $OPTS -l --nocolor --pager='less -RiMSFX#4' $OLD $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
     else
       cmd="grep $OPTS -rEIl --color=always -e $OLD $ID $IF $ED $EF | less -RiMSFX#4";
     fi
@@ -121,8 +121,8 @@ if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
       cmd="echo 'not implemented yet'";
     elif [ "$grepprg" = 'ag' ]; then
       if [ "$ED$EF" = '' ];
-      then cmd="ag $OPTS -l --nocolor --pager='less -RIMSFX#4' $OLD $ID $IF";
-      else cmd="ag $OPTS -l --nocolor --pager='less -RIMSFX#4' $OLD $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
+      then cmd="ag $OPTS -l --nocolor --pager='less -RiMSFX#4' $OLD $ID $IF";
+      else cmd="ag $OPTS -l --nocolor --pager='less -RiMSFX#4' $OLD $ID $IF -p <(printf '$ED $EF' | tr -s ' ' '\n')"; fi
       if [ "$sq" ];
       then cmd="$cmd --null | xargs -0 perl -pi -e \"s@$OLDRE@$NEWRE@g\"";
       else cmd="$cmd --null | xargs -0 perl -pi -e 's!$OLDRE!$NEWRE!g'"; fi
@@ -137,12 +137,14 @@ if [ "$OLD" ] && [ "$NEW" ] && [ -z "$Help" ]; then
     echo "$cmd"
   else
     eval "$cmd"
-    if [ "$grepprg" = 'rg' ]; then
-      eval "echo 'not implemented yet'";
-    elif [ "$grepprg" = 'ag' ]; then
-      eval "ag $OPTS -C3 --pager='less -RIMSFX#4' $NEW $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
-    else
-      eval "grep $OPTS -rEIHnC3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
+    if [ -z "$List" ]; then
+      if [ "$grepprg" = 'rg' ]; then
+        eval "echo 'not implemented yet'";
+      elif [ "$grepprg" = 'ag' ]; then
+        eval "ag $OPTS -C3 --pager='less -RiMSFX#4' $NEW $ID $IF -p <(printf \"$ED $EF\" | tr -s ' ' '\n')";
+      else
+        eval "grep $OPTS -rEIHnC3 --color=always -e $NEW $ID $IF $ED $EF | less -RiMSFX#4"
+      fi
     fi
   fi
 else
