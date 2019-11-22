@@ -3,7 +3,7 @@
 ## Why this exists
 I'm not happy with the verbosity of existing tools (find, grep, ag, sed, etc) in order to do a directory-wide regex search (and replace) of a keyword. Especially when it comes to whitelisting/blacklisting specific files (or file patterns) from your search. I created this to transpile my preferred syntax for search (and replace) into their corresponding find/grep/ag/sed commands so that I don't have to memorise grep/ag/etc specific syntax for whitelisting and blacklisting of files.
 
-It's not perfect yet and sorely due for a revamp (no ripgrep support, file pattern globs don't work the way I want it to) but I've been using it in its current state very heavily for symbolic search and replace in my Final Year Project.
+It's not perfect yet and sorely due for a revamp (no ripgrep support, file pattern globs don't work the way I want it to) but I've been using it in its current state very heavily for symbolic search and replace.
 
 Heavily inspired by thoughtbot's [search and replace script](https://thoughtbot.com/blog/sed-102-replace-in-place#find-and-replace-in-multiple-files), except `grepf` and `rgrepf` allow you to review all instances of the keywords you want to replace first (with `grepf`) before you actually replace them (with `rgrepf`). And it also allows for simple whitelisting and blacklisting of files in your search using the `::` separator (all files to the left of `::` are whitelisted, all files to the right of `::` are blacklisted).
 
